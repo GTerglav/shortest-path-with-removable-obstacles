@@ -1,0 +1,28 @@
+\documentclass{article}
+
+\usepackage{marvosym}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+
+
+\author{Gašper Terglav}
+\date{5. April 2024}
+\title{Najkrajša pot z odstranljivimi ovirami -- kratko poročilo}
+
+
+\begin{document}
+
+
+\maketitle
+
+\section*{Predstavitev problema}
+
+Problem je posplošitev klasične verzije, v kateri se lahko oviram samo izogibamo. V $\mathbb{R}^2$ imamo dve točki s in t iščemo najkrajšo evklidsko pot med njima. Ovire v ravnini so konveksni poligoni, vsak od njih ima ceno $c_i > 0$. Če imamo na voljo $C$ ''denarja'', katere ovire se splača odstraniti, da dosežemo najkrajšo pot?
+
+\subsection*{NP-težkost}
+
+Naš problem je NP-težek, kar lahko pokažemo z redukcijo na problem PARTITION, ki je NP-poln. Pri tem problemu imamo množico $A = \{a_1, a_2, ..., a_n\}$ pozitivnih celih števil. Vprašanje je, ali lakho $A$ razdelimo v množici $A_1$ in $A_2$, tako da je $W(A_1) = W(A_2) = \frac{1}{2}W(A)$, kjer je $W(S)$ vsota vseh elementov v $S$. Redukcijo dosežemo tako, da med točki $s$ in $t$ postavimo $n$ ovir, tako da je cena odstranitve enaka dolžini, za katero se pot podaljša, če ovire ne odstranimo. Če obstaja pot med s in t dolžine $\frac{1}{2}W(A) + \lVert s - t \rVert$ , kjer imamo $\frac{1}{2}W(A)$ proračuna za odstranitev ovir, potem smo našli razdelitev $A$ na dva enaka dela. Ovire, ki smo jih odstranili damo v eno možico, ostale pa v drugo. Konstrukcija je podrobneje opisana v članku.
+
+
+
+\end{document}
