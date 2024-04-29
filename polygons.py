@@ -2,24 +2,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 
-# Define the vertices for multiple polygons
-points = np.array([[-1, 1], [5, 0]])
+# start = np.array([1, 3])
+# goal = np.array([10, 1])
+# obstacles = [[[2, 2], [3, 3], [3, 4], [2, 5]],  # Obstacle 1
+#              [[6, 3], [7, 3], [7, 4], [6, 4]],  # Obstacle 2
+#              [[4, 1], [5, 2], [4, 3], [3, 2]]]  # Obstacle 3
+# costs = [8, 5, 10]  # Costs corresponding to each obstacle
+# budget = 7
+# epsilon = 1
 
-polygons = [
-    np.array([[2, 1], [2, 2], [1, 2], [0.5, 1.5]]),
-    np.array([[4, 1], [4, 1], [4, 0], [3, 0], [2.5, 1]]),
-    np.array([[0, 0], [1, 0], [1, 1], [0, 1], [-0.5, 0.5]]),
+start = [-1, 1]
+goal = [5, 0]
+obstacles = [
+    [[2, 1], [2, 2], [1, 2], [0.5, 1.5]],
+   [[4, 1], [4, 1], [4, 0], [3, 0], [2.5, 1]],
+   [[0, 0], [1, 0], [1, 1], [0, 1], [-0.5, 0.5]],
 ]
-
-fig, ax = plt.subplots()
-
-# Add each polygon to the plot
-for vertices in polygons:
-    p = Polygon(vertices, facecolor='k')
-    ax.add_patch(p)
-
-ax.scatter(points[:, 0], points[:, 1], color='r', label='Points')
-
-ax.set_xlim([-2, 6])
-ax.set_ylim([-1, 5])
-plt.show()
+costs = [3,3,3]
+budget = 1
+epsilon = 1
