@@ -67,20 +67,23 @@ def visibilityGraph(start, goal, obstacles, costs, budget):
 def createCopiesOfGraph(graph, budget, epsilon):
     newGraph = Graph()
     for i, neighbors in graph.vertices.items():
-        numCopies = math.ceil(budget / epsilon)  
+        numCopies = math.ceil(budget / epsilon) + 1 
         for k in range(numCopies):
             new_i = (i * numCopies) + k  
             for j, cost, length in neighbors:
                 new_k = math.ceil(k + cost) #index of j with which we want to connect
-                new_j = ((j)*numCopies+new_k) #so thid vertex is indexed as j_k' and we connect it to i_k
-                newGraph.addEdge(new_i, new_j, 0, length)
+                if new_k <= budget:
+                    new_j = ((j)*numCopies+new_k) #so thid vertex is indexed as j_k' and we connect it to i_k
+                    newGraph.addEdge(new_i, new_j, 0, length)
     newGraph.addVertex("start")
     newGraph.addVertex("sink")
 
     #We want to create a start and a sink and connect them to all of their copies.
     for i in range(numCopies):
         newGraph.addEdge("start",i, 0, 0)
+        newGraph.addEdge(i,"start", 0, 0)
         newGraph.addEdge(numCopies+i,"sink", 0, 0)
+        newGraph.addEdge("sink",numCopies+i, 0, 0)
     return newGraph
 
 def plotVisibilityGraph(start, goal, obstacles, graph):
@@ -117,28 +120,28 @@ def plotVisibilityGraph(start, goal, obstacles, graph):
 # epsilon = 1
 
 #simple test
-start = [0,0]
-goal = [5,0]
-obstacles = [[[2,1],[2,-1]]]
-costs = [1]
-budget = 2
-epsilon = 1
+# start = [0,0]
+# goal = [5,0]
+# obstacles = [[[2,1],[2,-1]]]
+# costs = [1]
+# budget = 2
+# epsilon = 1
 
 
 
 #original
 
 
-# start = [-1, 1]
-# goal = [5, 0]
-# obstacles = [
-#     [[2, 1], [2, 2], [1, 2], [0.5, 1.5]],
-#    [[4, 1], [4, 0], [3, 0], [2.5, 1]],
-#    [[0, 0], [1, 0], [1, 1], [0, 1], [-0.5, 0.5]],
-# ]
-# costs = [2,2,2]
-# budget = 1
-# epsilon = 1
+start = [-1, 1]
+goal = [5, 0]
+obstacles = [
+    [[2, 1], [2, 2], [1, 2], [0.5, 1.5]],
+   [[4, 1], [4, 0], [3, 0], [2.5, 1]],
+   [[0, 0], [1, 0], [1, 1], [0, 1], [-0.5, 0.5]],
+]
+costs = [2,2,2]
+budget = 1
+epsilon = 1
 
 # Construct visibility graph
 graph = visibilityGraph(start, goal, obstacles, costs, budget)
