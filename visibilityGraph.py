@@ -16,7 +16,7 @@ class Graph:
 def distance(p1,p2):
     return math.sqrt(abs(p1[0]-p2[0])**2 + abs(p1[1]-p2[1])**2)
 
-def intersect(p1, p2, p3, p4):
+# def intersect(p1, p2, p3, p4):
     # Convert NumPy arrays to tuples
     p1_tuple = tuple(p1)
     p2_tuple = tuple(p2)
@@ -33,6 +33,48 @@ def intersect(p1, p2, p3, p4):
 
     return ccw(p1, p3, p4) != ccw(p2, p3, p4) and ccw(p1, p2, p3) != ccw(p1, p2, p4)
 
+def intersect(p1, p2, p3, p4):
+    # p1_tuple = tuple(p1)
+    # p2_tuple = tuple(p2)
+    # p3_tuple = tuple(p3)
+    # p4_tuple = tuple(p4)
+
+    # # Check if all points are pairwise distinct
+    # if len(set((p1_tuple, p2_tuple, p3_tuple, p4_tuple))) != 4:
+    #     return False
+    
+    # def on_segment(p, q, r):
+    #     return (q[0] <= max(p[0], r[0]) and q[0] >= min(p[0], r[0]) and
+    #             q[1] <= max(p[1], r[1]) and q[1] >= min(p[1], r[1]))
+
+    # # Check if the intersection point lies within the bounding boxes of both line segments
+    # if (on_segment(p1, p3, p4) or on_segment(p2, p3, p4)) and (on_segment(p3, p1, p2) or on_segment(p4, p1, p2)):
+    #     return True
+    # return False
+
+    x1, y1 = p1
+    x2, y2 = p2
+    x3, y3 = p3
+    x4, y4 = p4
+
+    denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+
+    # If lines are parallel or coincident, they don't intersect
+    if denominator == 0:
+        return False
+
+    t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator
+    u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denominator
+
+    # If intersection point is within both line segments, return it
+    if 0 < t < 1 and 0 < u < 1:
+        return True
+    return False
+
+
+
+
+
 def visibilityGraph(start, goal, obstacles, costs, budget):
     #Construct visibility graph 
     points = np.vstack((start, goal, np.vstack(obstacles)))
@@ -43,7 +85,7 @@ def visibilityGraph(start, goal, obstacles, costs, budget):
         for j, p2 in enumerate(points):
             if i != j:
                 totalCost = 0
-                for l, obs in enumerate(obstacles):       
+                for l, obs in enumerate(obstacles):    
                     # If the line segment doesn't intersect but p1 and p2 belong to the same obstacle segment
                     if np.any(np.all(obs == p1, axis=1)) and np.any(np.all(obs == p2, axis=1)):
                         p1_index = np.where(np.all(obs == p1, axis=1))[0][0]
@@ -51,7 +93,7 @@ def visibilityGraph(start, goal, obstacles, costs, budget):
                         if abs(p1_index - p2_index) not in [1,len(obs)-1]:
                             totalCost += costs[l]
                     else:
-                        # First check the n,0 line then iterate 0,1->1,2 and so on
+                        # # First check the n,0 line then iterate 0,1->1,2 and so on
                         if intersect(p1,p2, obs[0], obs[-1]):
                             totalCost += costs[l] 
                         else: 
@@ -60,6 +102,8 @@ def visibilityGraph(start, goal, obstacles, costs, budget):
                                 if intersect(p1, p2, obs[k], obs[k+1]):
                                     totalCost += costs[l]
                                     break
+                        
+
                 if totalCost <= budget:
                     graph.addEdge(i,j,totalCost,distance(p1,p2))
     return graph
@@ -115,7 +159,7 @@ def plotVisibilityGraph(start, goal, obstacles, graph):
 # start = np.array([1, 2.5])
 # goal = np.array([9, 2])
 # obstacles = [[[3, 3], [4, 3], [4, 4], [3, 4]], [[6, 2], [7, 2], [7, 2.5], [6, 2.6]], [[5, 1], [3, 2], [1, -2]]]
-# costs = [10,6,15]
+# costs = [10,7,15]
 # budget = 6
 # epsilon = 1
 
@@ -154,8 +198,8 @@ def printGraph(graph):
         print(f"Vertex {vertex}: Neighbors {neighbors}")
 
 printGraph(graph)  
-print("StopSSSS")  
-printGraph(copiedGraph)
+# print("StopSSSS")  
+# printGraph(copiedGraph)
 
 
 # Plot visibility graph
