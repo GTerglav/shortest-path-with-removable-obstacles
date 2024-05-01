@@ -34,23 +34,6 @@ def distance(p1,p2):
     return ccw(p1, p3, p4) != ccw(p2, p3, p4) and ccw(p1, p2, p3) != ccw(p1, p2, p4)
 
 def intersect(p1, p2, p3, p4):
-    # p1_tuple = tuple(p1)
-    # p2_tuple = tuple(p2)
-    # p3_tuple = tuple(p3)
-    # p4_tuple = tuple(p4)
-
-    # # Check if all points are pairwise distinct
-    # if len(set((p1_tuple, p2_tuple, p3_tuple, p4_tuple))) != 4:
-    #     return False
-    
-    # def on_segment(p, q, r):
-    #     return (q[0] <= max(p[0], r[0]) and q[0] >= min(p[0], r[0]) and
-    #             q[1] <= max(p[1], r[1]) and q[1] >= min(p[1], r[1]))
-
-    # # Check if the intersection point lies within the bounding boxes of both line segments
-    # if (on_segment(p1, p3, p4) or on_segment(p2, p3, p4)) and (on_segment(p3, p1, p2) or on_segment(p4, p1, p2)):
-    #     return True
-    # return False
 
     x1, y1 = p1
     x2, y2 = p2
@@ -154,7 +137,7 @@ def plotVisibilityGraph(start, goal, obstacles, graph):
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
-
+################################ CASES ######################
 # Define points and obstacles
 # start = np.array([1, 2.5])
 # goal = np.array([9, 2])
@@ -171,10 +154,7 @@ def plotVisibilityGraph(start, goal, obstacles, graph):
 # budget = 2
 # epsilon = 1
 
-
-
 #original
-
 
 start = [-1, 1]
 goal = [5, 0]
@@ -187,10 +167,10 @@ costs = [2,2,2]
 budget = 1
 epsilon = 1
 
+############################## EXECUTION ##################################
 # Construct visibility graph
+
 graph = visibilityGraph(start, goal, obstacles, costs, budget)
-
-
 copiedGraph = createCopiesOfGraph(graph, budget, epsilon)
 
 def printGraph(graph):
