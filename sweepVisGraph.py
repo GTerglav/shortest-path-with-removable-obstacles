@@ -70,12 +70,11 @@ def intersect(p, q, obstacle):
 
 def viable(p, q, obstacles, costs, budget):
     # Check if the line segment between p and q intersects any obstacle
+    totalCost = 0
     for obstacle, cost in zip(obstacles, costs):
         if intersect(p, q, obstacle):
-            budget -= cost  # Reduce the budget by the cost of the obstacle
-            if budget < 0:  # If budget becomes negative, the line is not viable
-                return False
-    return True
+            totalCost += cost  # Reduce the budget by the cost of the obstacle
+    return totalCost
 
 def viableVerticesFromV(v, points, costs, budget):
     sortedVertices = sorted(points, key=lambda x: compareAngle(v, x))
@@ -85,7 +84,7 @@ def viableVerticesFromV(v, points, costs, budget):
     W = set()
 
     for w in sortedVertices:
-        if viable(v, w, points, costs, budget):
+        if viable(v, w, points, costs, budget) <= budget:
             W.add(w)
 
     
