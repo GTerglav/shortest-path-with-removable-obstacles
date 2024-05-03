@@ -5,6 +5,7 @@ class TreeNode:
         self.right = None
         self.height = 1
 
+
 class AVLTree:
     def getHeight(self, node):
         if not node:
@@ -77,6 +78,7 @@ class AVLTree:
             print("{0} ".format(root.key), end="")
             self.preorder(root.left)
             self.preorder(root.right)
+
 
 # Usage example:
 # Create an AVL tree object
