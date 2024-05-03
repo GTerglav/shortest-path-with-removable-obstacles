@@ -1,4 +1,6 @@
 import math
+
+import numpy as np
 from AVLTree import AVLTree, TreeNode
 
 class Graph:
@@ -20,7 +22,38 @@ def compareAngle(v, p):
     dist = distance(v, p)
     return (angle, dist)
 
-def intersect_segments(p1, q1, p2, q2):
+#Function that checks if halfline v p intersects obstacle segment start end
+def intersectLine(v, p, start, end):
+    # Calculate the direction vectors of the edge (start, end) and the line (v, p)
+    dx_edge = end[0] - start[0]
+    dy_edge = end[1] - start[1]
+    dx_line = p[0] - v[0]
+    dy_line = p[1] - v[1]
+
+    # Calculate the determinant of the 2x2 matrix formed by the direction vectors
+    determinant = dx_edge * dy_line - dy_edge * dx_line
+    
+    # Check if the determinant is close to zero, indicating collinearity
+    if abs(determinant) < 1e-10:
+        # Check if the points are collinear
+        if abs(dx_edge * (v[1] - start[1]) - dy_edge * (v[0] - start[0])) < 1e-10:
+            # Check if the intersection point lies within the line segment vp
+            t = ((v[0] - start[0]) * dy_line - (v[1] - start[1]) * dx_line) / determinant
+            u = -((v[0] - start[0]) * dy_edge - (v[1] - start[1]) * dx_edge) / determinant
+            if t >= 0 and 0 <= u <= 1:
+                return True
+    else:
+        # Calculate the parameters t and u for the intersection point
+        t = ((v[0] - start[0]) * dy_line - (v[1] - start[1]) * dx_line) / determinant
+        u = -((v[0] - start[0]) * dy_edge - (v[1] - start[1]) * dx_edge) / determinant
+
+        # Check if the intersection point lies within the line segment vp
+        if t >= 0 and 0 <= u <= 1:
+            return True
+
+    return False
+
+def intersectSegments(p1, q1, p2, q2):
     # Check if line segment (p1, q1) intersects line segment (p2, q2)
     # You can use various algorithms to check for intersection, such as cross product method
     # Here, I'll use a simple approach based on orientation of points
@@ -42,18 +75,18 @@ def intersect_segments(p1, q1, p2, q2):
         return True
 
     # Special cases: segments are collinear and overlapping
-    if o1 == 0 and on_segment(p1, p2, q1):
+    if o1 == 0 and onSegment(p1, p2, q1):
         return True
-    if o2 == 0 and on_segment(p1, q2, q1):
+    if o2 == 0 and onSegment(p1, q2, q1):
         return True
-    if o3 == 0 and on_segment(p2, p1, q2):
+    if o3 == 0 and onSegment(p2, p1, q2):
         return True
-    if o4 == 0 and on_segment(p2, q1, q2):
+    if o4 == 0 and onSegment(p2, q1, q2):
         return True
 
     return False
 
-def on_segment(p, q, r):
+def onSegment(p, q, r):
     # Check if point q lies on line segment pr
     return min(p[0], r[0]) <= q[0] <= max(p[0], r[0]) and min(p[1], r[1]) <= q[1] <= max(p[1], r[1])
 
@@ -64,7 +97,7 @@ def intersect(p, q, obstacle):
     for i in range(len(obstacle)):
         start = obstacle[i]
         end = obstacle[(i + 1) % len(obstacle)]  # Next vertex in the obstacle (considering it's a closed polygon)
-        if intersect_segments(p, q, start, end):
+        if intersectSegments(p, q, start, end):
             return True
     return False
 
@@ -76,13 +109,22 @@ def viable(p, q, obstacles, costs, budget):
             totalCost += cost  # Reduce the budget by the cost of the obstacle
     return totalCost
 
-def viableVerticesFromV(v, points, costs, budget):
+def viableVerticesFromV(v, points, obstacles, costs, budget):
+    #here sort vertices accoring to angle from v and distance from v
     sortedVertices = sorted(points, key=lambda x: compareAngle(v, x))
     
     T = AVLTree()
+    root = None
+
+    #here need to store obstacle edges that intersect with halfline form v
+    for obstacle in obstacles:
+        for i in range(len(obstacle)):
+            start = obstacle[i]
+            end = obstacle[(i + 1) % len(obstacle)]
+            if intersectLine(v, (v[0]+1,v[1]), start, end):
+                T.insert(root,(start,end))
 
     W = set()
-
     for w in sortedVertices:
         if viable(v, w, points, costs, budget) <= budget:
             W.add(w)
@@ -90,13 +132,17 @@ def viableVerticesFromV(v, points, costs, budget):
     
     return None
 
-def viabilityGraph(points, costs, budget):
+def viabilityGraph(start, goal, obstacles, costs, budget):
+    points = np.vstack((start, goal, np.vstack(obstacles)))
     graph = Graph()
     for i, p1 in enumerate(points):
         print(i,p1)
         graph.addVertex(i)
-        viable = viableVerticesFromV(p1, points, costs, budget)
+        viable = viableVerticesFromV(p1, points, obstacles, costs, budget)
         for j,p2,totalCost in viable:
             graph.addEdge(i,j,totalCost,distance(p1,p2))
 
     return graph
+
+
+
