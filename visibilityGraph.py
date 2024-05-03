@@ -100,8 +100,7 @@ def createCopiesOfGraph(graph, budget, epsilon):
     return newGraph
 
 
-def plotVisibilityGraph(start, goal, obstacles, graph, shortestPath=None):
-    """Plot the visibility graph"""
+def plotViabilityGraph(start, goal, obstacles, graph, shortestPath=None):
     plt.figure()
 
     # Plot obstacles
@@ -115,7 +114,7 @@ def plotVisibilityGraph(start, goal, obstacles, graph, shortestPath=None):
         p1 = np.vstack((start, goal, np.vstack(obstacles)))[start_vertex]
         for end_vertex, _, _ in edges:
             p2 = np.vstack((start, goal, np.vstack(obstacles)))[end_vertex]
-            plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "b-")
+            plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "b-", linewidth=0.2)
 
     # Plot start and goal
     plt.plot(*zip(*np.vstack((start, goal))), "ro")
@@ -149,6 +148,30 @@ def convertPathToCoordinates(path, obstacles, start, goal, budget, epsilon):
     return tuple(map(tuple, result))
 
 
+def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
+    """Plot only the points and obstacles"""
+    plt.figure()
+
+    # Plot obstacles
+    for obs in obstacles:
+        plt.fill(*zip(*obs), color="gray", alpha=0.5)
+        for vertex in obs:
+            plt.plot(*vertex, "ko")  # Plot obstacle vertices
+
+    # Plot start and goal
+    plt.plot(*start, "ro", label="Start")
+    plt.plot(*goal, "bo", label="Goal")
+
+    if shortestPath:
+        path_array = np.array(shortestPath)
+        plt.plot(path_array[:, 0], path_array[:, 1], "r-")
+
+    # Set aspect ratio and display
+    plt.gca().set_aspect("equal", adjustable="box")
+    plt.legend()
+    plt.show()
+
+
 def main(problem):
     start = problem.start
     goal = problem.goal
@@ -170,8 +193,9 @@ def main(problem):
         )
         print("Shortest path:", nicePath)
 
-    plotVisibilityGraph(start, goal, obstacles, graph, nicePath)
+    plotPointsAndObstacles(start, goal, obstacles, nicePath)
+    plotViabilityGraph(start, goal, obstacles, graph, nicePath)
 
 
 if __name__ == "__main__":
-    main(problems.problem2)
+    main(problems.problem4)
