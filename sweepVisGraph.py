@@ -16,6 +16,9 @@ class Graph:
         self.vertices.setdefault(end, []).append((start, cost, length))
 
 
+######################### Helper functions ####################################
+
+
 def distance(p1, p2):
     return math.sqrt(abs(p1[0] - p2[0]) ** 2 + abs(p1[1] - p2[1]) ** 2)
 
@@ -23,7 +26,7 @@ def distance(p1, p2):
 def compareAngle(v, p):
     angle = math.atan2(p[1] - v[1], p[0] - v[0])
     dist = distance(v, p)
-    return (angle, dist)
+    return (-angle, dist)
 
 
 # Function that checks if halfline v p intersects obstacle segment start end
@@ -50,7 +53,7 @@ def intersectLine(v, p, start, end):
                 / determinant
             )
             if t >= 0 and 0 <= u <= 1:
-                return True
+                return t
     else:
         # Calculate the parameters t and u for the intersection point
         t = ((v[0] - start[0]) * dy_line - (v[1] - start[1]) * dx_line) / determinant
@@ -58,9 +61,9 @@ def intersectLine(v, p, start, end):
 
         # Check if the intersection point lies within the line segment vp
         if t >= 0 and 0 <= u <= 1:
-            return True
+            return t
 
-    return False
+    return math.inf
 
 
 def intersectSegments(p1, q1, p2, q2):
@@ -118,7 +121,11 @@ def intersect(p, q, obstacle):
     return False
 
 
-def viable(p, q, obstacles, costs, budget):
+############################### Viability algorithm #############################################
+
+
+###TODO#####
+def viable(p, q, obstacles, costs):
     # Check if the line segment between p and q intersects any obstacle
     totalCost = 0
     for obstacle, cost in zip(obstacles, costs):
@@ -129,27 +136,40 @@ def viable(p, q, obstacles, costs, budget):
 
 def viableVerticesFromV(v, points, obstacles, costs, budget):
     # here sort vertices accoring to angle from v and distance from v
-    sortedVertices = sorted(points, key=lambda x: compareAngle(v, x))
+    sortedVertices = sorted(points, key=lambda x: compareAngle(x, v))
 
     T = AVLTree()
     root = None
 
+    # Notes to self:
     # here need to store obstacle edges that intersect with halfline form v
-    for obstacle in obstacles:
+    # But I dont think i need to store them in avl tree because i have to check them all for intersection anyway
+    # not just the leftmost one like in visibility algorithm. Ok maybe for removal and insertion AVL is nice.
+    # But i got through all obstacles for every halfline so this does nothing its just naive right?
+    # No i just go through incident edges for every halfline. Just at start i got through all obstacles.
+    # So this should be faster
+
+    for j, obstacle in enumerate(obstacles):
         for i in range(len(obstacle)):
             start = obstacle[i]
             end = obstacle[(i + 1) % len(obstacle)]
-            if intersectLine(v, (v[0] + 1, v[1]), start, end):
-                T.insert(root, (start, end))
+            t = intersectLine(v, (v[0] + 1, v[1]), start, end)
+            if t < math.inf:
+                # So our tree stores the following info about edges: start, end, distance from v and cost of whole obstacle.
+                T.insert(root, (start, end, t, costs[j]))
 
     W = set()
     for w in sortedVertices:
-        if viable(v, w, points, costs, budget) <= budget:
+        # tle morš vedt ceno robov in še greš samo čez robove v V.
+        costOfPathToW = viable(v, w, T)
+        if costOfPathToW <= budget:
+            #v W morš dat info o ceni in koordinatah
             W.add(w)
 
-    return None
+    return W
 
 
+###TODO###
 def viabilityGraph(start, goal, obstacles, costs, budget):
     points = np.vstack((start, goal, np.vstack(obstacles)))
     graph = Graph()
@@ -161,3 +181,4 @@ def viabilityGraph(start, goal, obstacles, costs, budget):
             graph.addEdge(i, j, totalCost, distance(p1, p2))
 
     return graph
+
