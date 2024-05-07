@@ -3,9 +3,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import random
 
-
-def distance(p1, p2):
-    return math.sqrt(abs(p1[0] - p2[0]) ** 2 + abs(p1[1] - p2[1]) ** 2)
+from helper import distance
 
 
 class problemParameters:

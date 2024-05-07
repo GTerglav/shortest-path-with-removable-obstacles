@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class TreeNode:
     def __init__(self, key):
         self.key = key
@@ -135,6 +138,20 @@ class AVLTree:
 
         return node
 
+    def deleteByVertex(self, node, vertex):
+        if not node:
+            return node
+
+        # Traverse left and right subtrees recursively
+        node.left = self.deleteByVertex(node.left, vertex)
+        node.right = self.deleteByVertex(node.right, vertex)
+
+        # If current node represents an edge including the given vertex, delete it
+        if np.array_equal(node.key[0], vertex) or np.array_equal(node.key[1], vertex):
+            return self.delete(node, node.key[2])
+
+        return node
+
     def getMinValueNode(self, node):
         current = node
 
@@ -170,37 +187,37 @@ class AVLTree:
                 self.printStructure(node.right, level + 1, "R--- ")
 
 
-# Usage example:
-# Create an AVL tree object
-avl_tree = AVLTree()
-root = None
+# # Usage example:
+# # Create an AVL tree object
+# avl_tree = AVLTree()
+# root = None
 
-# Insert elements into the AVL tree
-edges = [
-    ((1, 2), (3, 4), 5, 6),
-    ((2, 3), (4, 5), 3, 5),
-    ((3, 4), (5, 6), 7, 2),
-    ((3, 4), (5, 6), 8, 9),
-    ((3, 4), (5, 6), 9, 11),
-    ((3, 4), (5, 6), 10, 13),
-]  # Example edges
-for edge in edges:
-    root = avl_tree.insert(root, edge)
+# # Insert elements into the AVL tree
+# edges = [
+#     ((1, 2), (3, 4), 5, 6),
+#     ((2, 3), (4, 5), 3, 5),
+#     ((3, 4), (5, 6), 7, 2),
+#     ((3, 4), (5, 6), 8, 9),
+#     ((3, 4), (5, 6), 9, 11),
+#     ((3, 4), (5, 6), 10, 13),
+# ]  # Example edges
+# for edge in edges:
+#     root = avl_tree.insert(root, edge)
 
-# Print the preorder traversal of the AVL tree
-print("Preorder traversal of the constructed AVL tree is:")
-print(avl_tree.preorder(root))
-print("Structure is")
-avl_tree.printStructure(root)
+# # Print the preorder traversal of the AVL tree
+# print("Preorder traversal of the constructed AVL tree is:")
+# print(avl_tree.preorder(root))
+# print("Structure is")
+# avl_tree.printStructure(root)
 
-key_to_delete = 10
-root = avl_tree.delete(root, key_to_delete)
+# key_to_delete = 10
+# root = avl_tree.delete(root, key_to_delete)
 
-# Print the structure of the AVL tree after deletion
-print("\nStructure of the AVL tree after deletion of key", key_to_delete, "is:")
-avl_tree.printStructure(root)
-result = avl_tree.search(root, 9)
-if result:
-    print("Element", 9, "found in the AVL tree:", result.key)
-else:
-    print("Element", 9, "not found in the AVL tree.")
+# # Print the structure of the AVL tree after deletion
+# print("\nStructure of the AVL tree after deletion of key", key_to_delete, "is:")
+# avl_tree.printStructure(root)
+# result = avl_tree.search(root, 9)
+# if result:
+#     print("Element", 9, "found in the AVL tree:", result.key)
+# else:
+#     print("Element", 9, "not found in the AVL tree.")

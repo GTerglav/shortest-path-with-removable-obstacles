@@ -2,6 +2,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from dijkstra import dijkstra
+from helper import distance, intersect2, plotViabilityGraph
 import problems
 
 
@@ -16,31 +17,6 @@ class Graph:
         self.vertices.setdefault(start, []).append((end, cost, length))
 
 
-def distance(p1, p2):
-    return math.sqrt(abs(p1[0] - p2[0]) ** 2 + abs(p1[1] - p2[1]) ** 2)
-
-
-def intersect(p1, p2, p3, p4):
-    x1, y1 = p1
-    x2, y2 = p2
-    x3, y3 = p3
-    x4, y4 = p4
-
-    denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
-
-    # If lines are parallel or coincident, they don't intersect
-    if denominator == 0:
-        return False
-
-    t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator
-    u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denominator
-
-    # If intersection point is within both line segments, return it
-    if 0 < t < 1 and 0 < u < 1:
-        return True
-    return False
-
-
 def visibilityGraph(start, goal, obstacles, costs, budget):
     # Construct visibility graph
     points = np.vstack((start, goal, np.vstack(obstacles)))
@@ -51,7 +27,7 @@ def visibilityGraph(start, goal, obstacles, costs, budget):
             if i != j:
                 totalCost = 0
                 for l, obs in enumerate(obstacles):
-                    # If the line segment doesn't intersect but p1 and p2 belong to the same obstacle segment
+                    # If the line segment doesn't intersect2 but p1 and p2 belong to the same obstacle segment
                     if np.any(np.all(obs == p1, axis=1)) and np.any(
                         np.all(obs == p2, axis=1)
                     ):
@@ -61,12 +37,12 @@ def visibilityGraph(start, goal, obstacles, costs, budget):
                             totalCost += costs[l]
                     else:
                         # # First check the n,0 line then iterate 0,1->1,2 and so on
-                        if intersect(p1, p2, obs[0], obs[-1]):
+                        if intersect2(p1, p2, obs[0], obs[-1]):
                             totalCost += costs[l]
                         else:
-                            # Check for intersection with individual edges of the obstacle
+                            # Check for intersect2ion with individual edges of the obstacle
                             for k in range(len(obs) - 1):
-                                if intersect(p1, p2, obs[k], obs[k + 1]):
+                                if intersect2(p1, p2, obs[k], obs[k + 1]):
                                     totalCost += costs[l]
                                     break
 
@@ -98,35 +74,6 @@ def createCopiesOfGraph(graph, budget, epsilon):
         newGraph.addEdge(numCopies + i, -2, 0, 0)
         newGraph.addEdge(-2, numCopies + i, 0, 0)
     return newGraph
-
-
-def plotViabilityGraph(start, goal, obstacles, graph, shortestPath=None):
-    plt.figure()
-
-    # Plot obstacles
-    for obs in obstacles:
-        plt.fill(*zip(*obs), color="gray", alpha=0.5)
-        for vertex in obs:
-            plt.plot(*vertex, "ko")  # Plot obstacle vertices
-
-    # Plot edges
-    for start_vertex, edges in graph.vertices.items():
-        p1 = np.vstack((start, goal, np.vstack(obstacles)))[start_vertex]
-        for end_vertex, _, _ in edges:
-            p2 = np.vstack((start, goal, np.vstack(obstacles)))[end_vertex]
-            plt.plot([p1[0], p2[0]], [p1[1], p2[1]], "b-", linewidth=0.2)
-
-    # Plot start and goal
-    plt.plot(*zip(*np.vstack((start, goal))), "ro")
-
-    # Plot shortest path if provided
-    if shortestPath:
-        path_array = np.array(shortestPath)
-        plt.plot(path_array[:, 0], path_array[:, 1], "r-")
-
-    # Set aspect ratio and display
-    plt.gca().set_aspect("equal", adjustable="box")
-    plt.show()
 
 
 ############################## EXECUTION ##################################
@@ -198,4 +145,4 @@ def main(problem):
 
 
 if __name__ == "__main__":
-    main(problems.problem4)
+    main(problems.problem1)
