@@ -20,7 +20,6 @@ class Graph:
         start_tuple = tuple(start)
         end_tuple = tuple(end)
         self.vertices.setdefault(start_tuple, []).append((end_tuple, cost, length))
-        self.vertices.setdefault(end_tuple, []).append((start_tuple, cost, length))
 
 
 ############################### Viability algorithm #############################################
@@ -184,6 +183,33 @@ def viabilityGraph(start, goal, obstacles, costs, budget):
     return graph
 
 
+def createCopiesOfGraph(graph, start, goal, budget, epsilon):
+    newGraph = Graph()
+
+    for vertex, neighbors in graph.vertices.items():
+        numCopies = math.ceil(budget / epsilon) + 1
+        for k in range(numCopies):
+            new_vertex = (vertex[0], vertex[1], k)
+            for neighbor, cost, length in neighbors:
+                new_k = math.ceil(k + cost)
+                if new_k <= budget:
+                    new_neighbor = (neighbor[0], neighbor[1], new_k)
+                    newGraph.addEdge(new_vertex, new_neighbor, 0, length)
+
+    # add start and sink and connect them to copies
+    newStart = (-1, -1, -1)
+    newSink = (-2, -2, -2)
+    newGraph.addVertex(newStart)
+    newGraph.addVertex(newSink)
+    # Create new start (indexed as -1) and sink (indexed as -2) vertices and connect them to all of their copies
+    for i in range(numCopies):
+        newGraph.addEdge(newStart, (start[0], start[1], i), 0, 0)
+        newGraph.addEdge((start[0], start[1], i), newStart, 0, 0)
+        newGraph.addEdge((goal[0], goal[1], i), newSink, 0, 0)
+        newGraph.addEdge(newSink, (goal[0], goal[1], i), 0, 0)
+    return newGraph
+
+
 def plotGraph(graph, start, goal, obstacles):
     # Plot edges
     for vertex, edges in graph.vertices.items():
@@ -227,20 +253,18 @@ def main(problem):
     epsilon = problem.epsilon
 
     graph = viabilityGraph(start, goal, obstacles, costs, budget)
-    # copiedGraph = createCopiesOfGraph(graph, budget, epsilon)
+    copiedGraph = createCopiesOfGraph(graph, start, goal, budget, epsilon)
+    helper.printGraph(copiedGraph)
 
-    # start_vertex = -1
-    # targetVertex = -2
-    # shortestPath = dijkstra(copiedGraph, start_vertex, targetVertex)
+    start_vertex = (-1, -1, -1)
+    targetVertex = (-2, -2, -2)
+    shortestPath = dijkstra(copiedGraph, start_vertex, targetVertex)
 
-    # if shortestPath:
-    #     nicePath = convertPathToCoordinates(
-    #         shortestPath, obstacles, start, goal, budget, epsilon
-    #     )
-    #     print("Shortest path:", nicePath)
+    if shortestPath:
+        nicePath = shortestPath[1:-1]
+        print("Shortest path:", nicePath)
 
-    # plotPointsAndObstacles(start, goal, obstacles, nicePath)
-    # helper.plotPointsAndObstacles(start, goal, obstacles)
+    helper.plotPointsAndObstaclesSweep(start, goal, obstacles, nicePath)
     plotGraph(graph, start, goal, obstacles)
 
 

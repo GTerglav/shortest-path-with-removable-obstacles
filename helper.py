@@ -175,6 +175,11 @@ def costOfSegment(v, w, root):
     return total_cost
 
 
+def printGraph(graph):
+    for vertex, neighbors in graph.vertices.items():
+        print(f"Vertex {vertex}: Neighbors {neighbors}")
+
+
 def plotViabilityGraph(start, goal, obstacles, graph, shortestPath=None):
     plt.figure()
 
@@ -219,8 +224,38 @@ def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
     plt.plot(*goal, "bo", label="Goal")
 
     if shortestPath:
-        path_array = np.array(shortestPath)
-        plt.plot(path_array[:, 0], path_array[:, 1], "r-")
+        # path = [(x, y) for x, y, _ in shortestPath]
+        pathArray = np.array(shortestPath)
+        plt.plot(pathArray[:, 0], pathArray[:, 1], "r-")
+
+    # Set aspect ratio and display
+    # plt.gca().set_aspect("equal", adjustable="box")
+    plt.legend()
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.title("Graph with Obstacles")
+    plt.grid(True)
+    plt.show()
+
+
+def plotPointsAndObstaclesSweep(start, goal, obstacles, shortestPath=None):
+    """Plot only the points and obstacles"""
+    plt.figure()
+
+    # Plot obstacles
+    for obs in obstacles:
+        plt.fill(*zip(*obs), color="gray", alpha=0.5)
+        for vertex in obs:
+            plt.plot(*vertex, "ko")  # Plot obstacle vertices
+
+    # Plot start and goal
+    plt.plot(*start, "ro", label="Start")
+    plt.plot(*goal, "bo", label="Goal")
+
+    if shortestPath:
+        path = [(x, y) for x, y, _ in shortestPath]
+        pathArray = np.array(path)
+        plt.plot(pathArray[:, 0], pathArray[:, 1], "r-")
 
     # Set aspect ratio and display
     # plt.gca().set_aspect("equal", adjustable="box")

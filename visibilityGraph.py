@@ -117,4 +117,4 @@ def main(problem):
 
 
 if __name__ == "__main__":
-    main(problems.problem4)
+    main(problems.problem2)
