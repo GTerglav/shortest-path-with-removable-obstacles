@@ -14,8 +14,7 @@ def compareAngle(v, p):
     return (-angle, dist)
 
 
-# TODO####
-# Function that checks if halfline v p intersects obstacle segment start end
+# Checks if halfline v p intersects obstacle segment start end
 def intersectLine(v, p, start, end):
     # Calculate the direction vectors of the edge (start, end) and the line (v, p)
     b0 = end[0] - start[0]
@@ -23,12 +22,14 @@ def intersectLine(v, p, start, end):
     a0 = p[0] - v[0]
     a1 = p[1] - v[1]
 
-    # Calculate the determinant of the 2x2 matrix formed by the direction vectors
     determinant = b0 * a1 - b1 * a0
 
     # Check if the determinant is close to zero, indicating collinearity
     if abs(determinant) < 1e-10:
-        return math.inf
+        if ccw(v, p, start) == 0:
+            return min(distance(v, start), distance(v, end))
+        else:
+            return math.inf
     else:
         # Calculate the parameters t and u for the intersection point
         # t = ((v[0] - start[0]) * b1 - (v[1] - start[1]) * b0) / determinant
@@ -36,7 +37,7 @@ def intersectLine(v, p, start, end):
         t = (b1 * (v[0] - start[0]) + b0 * (start[1] - v[1])) / determinant
 
         # Check if the intersection point lies within the line segment vp
-        if t >= 0 and 0 <= u <= 1:
+        if t >= 0 and 0 < u < 1:
             return t
         else:
             return math.inf
@@ -203,4 +204,29 @@ def plotViabilityGraph(start, goal, obstacles, graph, shortestPath=None):
     plt.show()
 
 
-print(intersect2((1, 3), (4, 3), (2, 5), (2, 2)))
+def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
+    """Plot only the points and obstacles"""
+    plt.figure()
+
+    # Plot obstacles
+    for obs in obstacles:
+        plt.fill(*zip(*obs), color="gray", alpha=0.5)
+        for vertex in obs:
+            plt.plot(*vertex, "ko")  # Plot obstacle vertices
+
+    # Plot start and goal
+    plt.plot(*start, "ro", label="Start")
+    plt.plot(*goal, "bo", label="Goal")
+
+    if shortestPath:
+        path_array = np.array(shortestPath)
+        plt.plot(path_array[:, 0], path_array[:, 1], "r-")
+
+    # Set aspect ratio and display
+    # plt.gca().set_aspect("equal", adjustable="box")
+    plt.legend()
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.title("Graph with Obstacles")
+    plt.grid(True)
+    plt.show()

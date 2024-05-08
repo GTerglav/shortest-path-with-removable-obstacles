@@ -22,6 +22,9 @@ class AVLTree:
 
     def rotateRight(self, y):
         x = y.left
+        if x is None:
+            print("alert1")
+            return y
         T2 = x.right
 
         x.right = y
@@ -34,6 +37,9 @@ class AVLTree:
 
     def rotateLeft(self, x):
         y = x.right
+        if y is None:
+            print("alert2")
+            return x
         T2 = y.left
 
         y.left = x

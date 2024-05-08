@@ -1,8 +1,7 @@
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 from dijkstra import dijkstra
-from helper import distance, intersect2, plotViabilityGraph
+from helper import distance, intersect2, plotViabilityGraph, plotPointsAndObstacles
 import problems
 
 
@@ -76,9 +75,6 @@ def createCopiesOfGraph(graph, budget, epsilon):
     return newGraph
 
 
-############################## EXECUTION ##################################
-
-
 def printGraph(graph):
     for vertex, neighbors in graph.vertices.items():
         print(f"Vertex {vertex}: Neighbors {neighbors}")
@@ -93,30 +89,6 @@ def convertPathToCoordinates(path, obstacles, start, goal, budget, epsilon):
             pointsIndex = vertex // numCopies
             result += (points[pointsIndex],)
     return tuple(map(tuple, result))
-
-
-def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
-    """Plot only the points and obstacles"""
-    plt.figure()
-
-    # Plot obstacles
-    for obs in obstacles:
-        plt.fill(*zip(*obs), color="gray", alpha=0.5)
-        for vertex in obs:
-            plt.plot(*vertex, "ko")  # Plot obstacle vertices
-
-    # Plot start and goal
-    plt.plot(*start, "ro", label="Start")
-    plt.plot(*goal, "bo", label="Goal")
-
-    if shortestPath:
-        path_array = np.array(shortestPath)
-        plt.plot(path_array[:, 0], path_array[:, 1], "r-")
-
-    # Set aspect ratio and display
-    plt.gca().set_aspect("equal", adjustable="box")
-    plt.legend()
-    plt.show()
 
 
 def main(problem):
@@ -145,4 +117,4 @@ def main(problem):
 
 
 if __name__ == "__main__":
-    main(problems.problem1)
+    main(problems.problem4)

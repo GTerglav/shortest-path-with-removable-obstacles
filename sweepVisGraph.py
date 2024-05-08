@@ -27,13 +27,24 @@ class Graph:
 
 
 def viable(p, w, wMinusOne, costToWMinusOne, root, obstacles, costs):
+    # check if p and w are in same obstacle segment
+    sameObstacleResult = helper.inSameObstacleSegment(p, w, obstacles, costs)
+    if sameObstacleResult is not None:
+        obstacle, cost = sameObstacleResult
+        if helper.areNeighboursInObstacle(p, w, obstacle):
+            return 0
+        else:
+            return cost
+
     # If w and w_-1 are not colinear then just sum up all the obstacles on the path
-    if (wMinusOne is None) or (helper.ccw(p, w, wMinusOne)) != 0:
+    elif (wMinusOne is None) or (helper.ccw(p, w, wMinusOne)) != 0:
         if root is None:
             return 0
 
         totalCost = 0
         count = 0
+        # want to keep track of costs
+        costDict = {}
 
         # Traverse the AVL tree to find edges
         stack = [root]
@@ -41,17 +52,23 @@ def viable(p, w, wMinusOne, costToWMinusOne, root, obstacles, costs):
             node = stack.pop()
             if node is not None:
                 start, end, _, cost = node.key
-                if np.array_equal(start, w) and np.array_equal(end, w):
+                if helper.intersect2(p, w, start, end):
                     totalCost += cost
                     count += 1
+                    if cost in costDict:
+                        costDict.pop(cost)
+                    else:
+                        costDict[cost] = True
                 stack.append(node.left)
                 stack.append(node.right)
 
-        # Divide the total cost by 2 if there are an even number of edges
-        if count % 2 == 0:
+        # If the cost is counted twice we have to divide by two if its counted once then its full cost
+
+        if len(costDict) == 0:
             totalCost /= 2
         else:
-            totalCost = (totalCost - cost) / 2 + cost
+            singleCost = sum(costDict.keys())
+            totalCost = (totalCost - singleCost) / 2 + singleCost
         return totalCost
 
     # If they are colinear then we know the cost to w_-1 just need the cost from w_-1 to w
@@ -98,32 +115,63 @@ def viableVerticesFromV(v, points, obstacles, costs, budget):
     wMinusOne = None
     costToWMinusOne = 0
     for w in sortedVertices:
-        # tle morš vedt ceno robov in še greš samo čez robove v V.
-        costOfPathToW = viable(v, w, wMinusOne, costToWMinusOne, root, obstacles, costs)
-        print(v, w, costOfPathToW)
-        if costOfPathToW <= budget:
-            W.add((tuple(w), costOfPathToW))
+        if not np.array_equal(v, w):
 
-        # need to delete from T edge that line on counter clockwise side of line
-        # But all edges that include w should be on the counter clockwise side so i can just delete them all
-        root = T.deleteByVertex(root, w)
+            # WrongCode but maybe usefull later
+            # Add the edges to T with distance based on next w
+            # if wMinusOne is not None:
+            #     for k, obstacle in enumerate(obstacles):
+            #         for i in range(len(obstacle)):
+            #             start = obstacle[i]
+            #             end = obstacle[(i + 1) % len(obstacle)]
+            #             if (
+            #                 helper.ccw(v, wMinusOne, start) <= 0
+            #                 and np.array_equal(end, wMinusOne)
+            #             ) or (
+            #                 helper.ccw(v, wMinusOne, end) <= 0
+            #                 and np.array_equal(start, wMinusOne)
+            #             ):
+            #                 t = helper.intersectLine(v, w, start, end)
+            #                 if 0 < t < 1:
+            #                     root = T.insert(root, (start, end, t, costs[k]))
 
-        # need to insert into T edges that include w and lie on the clockwise side of the line
-        for k, obstacle in enumerate(obstacles):
-            for i in range(len(obstacle)):
-                start = obstacle[i]
-                end = obstacle[(i + 1) % len(obstacle)]
-                if (helper.ccw(v, w, start) <= 0 and np.array_equal(end, w)) or (
-                    helper.ccw(v, w, end) <= 0 and np.array_equal(start, w)
-                ):
-                    root = T.insert(root, (start, end, helper.distance(v, w), costs[k]))
-        # we need to store w_-1
-        wMinusOne = w
-        costToWMinusOne = costOfPathToW
+            costOfPathToW = viable(
+                v, w, wMinusOne, costToWMinusOne, root, obstacles, costs
+            )
+            # print(v, w, costOfPathToW)
+            if costOfPathToW <= budget:
+                W.add((tuple(w), costOfPathToW))
+
+            # need to delete from T edge that line on counter clockwise side of line
+            # But all edges that include w should be on the counter clockwise side so i can just delete them all
+            root = T.deleteByVertex(root, w)
+
+            # need to insert into T edges that include w and lie on the clockwise side of the line
+            for k, obstacle in enumerate(obstacles):
+                for i in range(len(obstacle)):
+                    start = obstacle[i]
+                    end = obstacle[(i + 1) % len(obstacle)]
+                    if (helper.ccw(v, w, start) <= 0 and np.array_equal(end, w)) or (
+                        helper.ccw(v, w, end) <= 0 and np.array_equal(start, w)
+                    ):
+                        root = T.insert(
+                            root,
+                            (
+                                start,
+                                end,
+                                # I dont want two to have same distance M
+                                # Maybe should sort them by clockwise angle??? I dont know this is wrong
+                                (helper.distance(v, start) + helper.distance(v, end))
+                                / 2,
+                                costs[k],
+                            ),
+                        )
+            # we need to store w_-1
+            wMinusOne = w
+            costToWMinusOne = costOfPathToW
     return W
 
 
-###TODO###
 def viabilityGraph(start, goal, obstacles, costs, budget):
     points = np.vstack((start, goal, np.vstack(obstacles)))
     graph = Graph()
@@ -147,7 +195,7 @@ def plotGraph(graph, start, goal, obstacles):
                 [start_point[0], end_point[0]],
                 [start_point[1], end_point[1]],
                 "b-",
-                linewidth=0.6,
+                linewidth=0.1,
             )
 
     # Plot obstacles
@@ -155,6 +203,8 @@ def plotGraph(graph, start, goal, obstacles):
         x_coords = [point[0] for point in obstacle]
         y_coords = [point[1] for point in obstacle]
         plt.fill(x_coords, y_coords, "gray")
+        for vertex in obstacle:
+            plt.plot(*vertex, "ko")  # Plot obstacle vertices
 
     # Plot start and end vertices
     plt.scatter(start[0], start[1], color="green", label="Start")
@@ -190,8 +240,9 @@ def main(problem):
     #     print("Shortest path:", nicePath)
 
     # plotPointsAndObstacles(start, goal, obstacles, nicePath)
+    # helper.plotPointsAndObstacles(start, goal, obstacles)
     plotGraph(graph, start, goal, obstacles)
 
 
 if __name__ == "__main__":
-    main(problems.problem2)
+    main(problems.problem4)
