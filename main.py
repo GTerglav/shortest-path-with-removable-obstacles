@@ -23,12 +23,86 @@ problems = {
 }
 
 
-def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
-    """Generate a Plotly figure for points and obstacles"""
+# def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
+#     """Generate a Plotly figure for points and obstacles"""
+#     fig = go.Figure()
+
+#     # Plot obstacles
+#     for obs in obstacles:
+#         x_obs, y_obs = zip(*obs)
+#         fig.add_trace(
+#             go.Scatter(
+#                 x=x_obs,
+#                 y=y_obs,
+#                 fill="toself",
+#                 fillcolor="rgba(128,128,128,0.5)",
+#                 line=dict(color="rgba(128,128,128,0.5)"),
+#                 showlegend=False,
+#             )
+#         )
+#         for vertex in obs:
+#             fig.add_trace(
+#                 go.Scatter(
+#                     x=[vertex[0]],
+#                     y=[vertex[1]],
+#                     mode="markers",
+#                     marker=dict(color="black"),
+#                     showlegend=False,
+#                 )
+#             )  # Plot obstacle vertices
+
+#     # Plot start and goal
+#     fig.add_trace(
+#         go.Scatter(
+#             x=[start[0]],
+#             y=[start[1]],
+#             mode="markers",
+#             marker=dict(color="red"),
+#             name="Start",
+#         )
+#     )
+#     fig.add_trace(
+#         go.Scatter(
+#             x=[goal[0]],
+#             y=[goal[1]],
+#             mode="markers",
+#             marker=dict(color="blue"),
+#             name="Goal",
+#         )
+#     )
+
+#     if shortestPath:
+#         path = [(x, y) for x, y, _ in shortestPath]
+#         path_x, path_y = zip(*path)
+#         fig.add_trace(
+#             go.Scatter(
+#                 x=path_x,
+#                 y=path_y,
+#                 mode="lines",
+#                 line=dict(color="red"),
+#                 name="Shortest Path",
+#             )
+#         )
+
+#     # Update layout
+#     fig.update_layout(
+#         xaxis=dict(title="X"),
+#         yaxis=dict(title="Y"),
+#         title="Graph with Obstacles",
+#         showlegend=True,
+#         hovermode="closest",
+#         plot_bgcolor="white",
+#     )
+
+#     return fig
+
+
+def plotPointsAndObstacles(start, goal, obstacles, costs, budget, shortestPath=None):
+    """Generate a Plotly figure for points, obstacles, budget, and cost"""
     fig = go.Figure()
 
     # Plot obstacles
-    for obs in obstacles:
+    for i, (obs, cost) in enumerate(zip(obstacles, costs)):
         x_obs, y_obs = zip(*obs)
         fig.add_trace(
             go.Scatter(
@@ -37,6 +111,7 @@ def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
                 fill="toself",
                 fillcolor="rgba(128,128,128,0.5)",
                 line=dict(color="rgba(128,128,128,0.5)"),
+                name=f"Obstacle {i+1}",
                 showlegend=False,
             )
         )
@@ -84,6 +159,29 @@ def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
             )
         )
 
+    # Add budget annotation
+    budget_text = f"Budget: {budget}"
+    fig.add_annotation(
+        xref="paper",
+        yref="paper",
+        x=0.5,
+        y=1.05,
+        text=budget_text,
+        showarrow=False,
+    )
+
+    # Add cost annotations for each obstacle
+    for i, cost in enumerate(costs):
+        obs_center_x = sum([vertex[0] for vertex in obstacles[i]]) / len(obstacles[i])
+        obs_center_y = sum([vertex[1] for vertex in obstacles[i]]) / len(obstacles[i])
+        cost_text = f"{cost}"
+        fig.add_annotation(
+            x=obs_center_x,
+            y=obs_center_y,
+            text=cost_text,
+            showarrow=False,
+        )
+
     # Update layout
     fig.update_layout(
         xaxis=dict(title="X"),
@@ -128,7 +226,12 @@ def calculate_shortest_path():
 
         # Generate Plotly figure
         fig = plotPointsAndObstacles(
-            problem.start, problem.goal, problem.obstacles, result
+            problem.start,
+            problem.goal,
+            problem.obstacles,
+            problem.costs,
+            problem.budget,
+            result,
         )
 
         # Convert Plotly figure to JSON format

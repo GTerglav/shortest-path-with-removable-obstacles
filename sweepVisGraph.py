@@ -217,21 +217,21 @@ def plotGraph(graph, start, goal, obstacles):
     # Plot edges
     for vertex, edges in graph.vertices.items():
         for edge in edges:
-            start_point = np.array(vertex)
-            end_point, _, _ = edge
-            end_point = np.array(end_point)
+            startPoint = np.array(vertex)
+            endPoint, _, _ = edge
+            endPoint = np.array(endPoint)
             plt.plot(
-                [start_point[0], end_point[0]],
-                [start_point[1], end_point[1]],
+                [startPoint[0], endPoint[0]],
+                [startPoint[1], endPoint[1]],
                 "b-",
                 linewidth=0.1,
             )
 
     # Plot obstacles
     for obstacle in obstacles:
-        x_coords = [point[0] for point in obstacle]
-        y_coords = [point[1] for point in obstacle]
-        plt.fill(x_coords, y_coords, "gray")
+        xCoords = [point[0] for point in obstacle]
+        yCoords = [point[1] for point in obstacle]
+        plt.fill(xCoords, yCoords, "gray")
         for vertex in obstacle:
             plt.plot(*vertex, "ko")  # Plot obstacle vertices
 
@@ -260,9 +260,9 @@ def main(problem, epsilon=None):
     graph = viabilityGraph(start, goal, obstacles, costs, budget)
     copiedGraph = createCopiesOfGraph(graph, start, goal, budget, epsilon)
 
-    start_vertex = (-1, -1, -1)
+    startVertex = (-1, -1, -1)
     targetVertex = (-2, -2, -2)
-    shortestPath = dijkstra(copiedGraph, start_vertex, targetVertex)
+    shortestPath = dijkstra(copiedGraph, startVertex, targetVertex)
 
     if shortestPath:
         nicePath = shortestPath[1:-1]
