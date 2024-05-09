@@ -1,4 +1,5 @@
 import math
+import time
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -6,6 +7,8 @@ from AVLTree import AVLTree, TreeNode
 
 from dijkstra import dijkstra
 import helper
+
+from problems import problemParameters
 import problems
 
 
@@ -244,17 +247,18 @@ def plotGraph(graph, start, goal, obstacles):
     plt.show()
 
 
-def main(problem):
+def main(problem, epsilon=None):
     start = problem.start
     goal = problem.goal
     obstacles = problem.obstacles
     costs = problem.costs
     budget = problem.budget
-    epsilon = problem.epsilon
+
+    if epsilon is None:
+        epsilon = problem.epsilon
 
     graph = viabilityGraph(start, goal, obstacles, costs, budget)
     copiedGraph = createCopiesOfGraph(graph, start, goal, budget, epsilon)
-    helper.printGraph(copiedGraph)
 
     start_vertex = (-1, -1, -1)
     targetVertex = (-2, -2, -2)
@@ -262,11 +266,23 @@ def main(problem):
 
     if shortestPath:
         nicePath = shortestPath[1:-1]
-        print("Shortest path:", nicePath)
+        print(f"Shortest path from {start} to {goal} is {nicePath}")
+        return nicePath
+    else:
+        return []
 
-    helper.plotPointsAndObstaclesSweep(start, goal, obstacles, nicePath)
-    plotGraph(graph, start, goal, obstacles)
+    # helper.plotPointsAndObstaclesSweep(start, goal, obstacles, nicePath)
+    # plotGraph(graph, start, goal, obstacles)
 
 
+pklProblem1 = problems.loadProblem("problem1.pkl")
+pklProblem2 = problems.loadProblem("problem2.pkl")
 if __name__ == "__main__":
-    main(problems.problem4)
+    main(pklProblem2)
+
+    # epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
+    # for epsilon in epsilons:
+    #     start_time = time.time()
+    #     main(pklProblem2, epsilon)
+    #     end_time = time.time()
+    #     print(f"Epsilon {epsilon}: Execution time {end_time - start_time} seconds")

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortest Path Solver</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Shortest Path Solver</h1>
+    <select id="problemSelect">
+        <option value="">Select a problem</option>
+    </select>
+    <input type="range" id="epsilonRange" min="0.00001" max="1" step="0.00001" value="1">
+    <span id="epsilonValue">1</span>
+    <button id="calculateButton">Calculate Shortest Path</button>
+    <div id="result"></div>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 import math
+import pickle
 from matplotlib import pyplot as plt
 import numpy as np
 import random
@@ -56,7 +57,7 @@ problem3 = problemParameters(
     ([9, 2]),
     [
         [[3, 3], [4, 3], [4, 4], [3, 4]],
-        [[6, 2], [7, 2], [7, 2.5], [6, 2.6]],
+        [[6, 2], [7, 2], [7, 3], [6, 3]],
         [[5, 1], [3, 2], [1, -2]],
     ],
     [4, 4, 4],
@@ -89,12 +90,12 @@ problem4 = problemParameters(
 #######Generate problems
 
 
-def generate_convex_obstacle(num_vertices, x, y):
+def generate_convexObstacle(numVertices, x, y):
     # Generate random vertices within a radius of 5
     vertices = []
     angle = 0
     radius = 1
-    for _ in range(num_vertices):
+    for _ in range(numVertices):
         angle = np.random.uniform(angle, 2 * np.pi)
         radius = np.random.uniform(radius, 20)
         newX = radius * np.cos(angle) + x
@@ -103,45 +104,61 @@ def generate_convex_obstacle(num_vertices, x, y):
     return vertices
 
 
-def generate_problem(
-    num_obstacles, min_vertices_per_obstacle, max_vertices_per_obstacle
+def generateProblem(
+    filename,
+    numObstacles,
+    minVerticesPerObstacle,
+    maxVerticesPerObstacle,
+    gridSize,
+    obstacleDiameter,
+    budget,
+    epsilon,
 ):
-    start = (-100, -100)
-    goal = (100, 100)
+    start = (-gridSize, -gridSize)
+    goal = (gridSize, gridSize)
     obstacles = []
     costs = []
-    budget = 5
-    epsilon = 1
 
     vertexList = []
     x = 0
     y = 0
-    for _ in range(num_obstacles):
-        num_vertices = np.random.randint(
-            min_vertices_per_obstacle, max_vertices_per_obstacle
-        )
+    for _ in range(numObstacles):
+        numVertices = np.random.randint(minVerticesPerObstacle, maxVerticesPerObstacle)
 
-        obstacle = generate_convex_obstacle(num_vertices, x, y)
+        obstacle = generate_convexObstacle(numVertices, x, y)
         obstacles.append(obstacle)
         vertexList.append((x, y))
 
-        x1 = np.random.uniform(-80, 80)
-        y1 = np.random.uniform(-80, 80)
+        x1 = np.random.uniform(
+            -(gridSize - obstacleDiameter / 2), (gridSize - obstacleDiameter / 2)
+        )
+        y1 = np.random.uniform(
+            -(gridSize - obstacleDiameter / 2), (gridSize - obstacleDiameter / 2)
+        )
         flag = True
         while flag:
             flag = False
             for point in vertexList:
-                if distance((x1, y1), point) < 40:
-                    x1 = np.random.uniform(-80, 80)
-                    y1 = np.random.uniform(-80, 80)
+                if distance((x1, y1), point) < obstacleDiameter:
+                    x1 = np.random.uniform(
+                        -(gridSize - obstacleDiameter / 2),
+                        (gridSize - obstacleDiameter / 2),
+                    )
+                    y1 = np.random.uniform(
+                        -(gridSize - obstacleDiameter / 2),
+                        (gridSize - obstacleDiameter / 2),
+                    )
                     flag = True
                     break
         x = x1
         y = y1
 
-        costs.append(np.random.uniform(0, 15))
+        costs.append(np.random.uniform(0, budget))
     print(vertexList)
-    return problemParameters(start, goal, obstacles, costs, budget, epsilon)
+    # return problemParameters(start, goal, obstacles, costs, budget, epsilon)
+    problem = problemParameters(start, goal, obstacles, costs, budget, epsilon)
+    with open(filename, "wb") as f:
+        pickle.dump(problem, f)
 
 
 def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
@@ -168,6 +185,13 @@ def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
     plt.show()
 
 
-# problemRandom = generate_problem(20, 3, 5)
+def loadProblem(filename):
+    with open(filename, "rb") as f:
+        problem = pickle.load(f)
+    return problem
+
+
+# generateProblem("problem2.pkl", 50, 3, 5, 1000, 40, 5, 1)
+
 
 # plotPointsAndObstacles(problemRandom.start, problemRandom.goal, problemRandom.obstacles)

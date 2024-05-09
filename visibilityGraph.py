@@ -1,8 +1,10 @@
 import math
+import time
 import numpy as np
 from dijkstra import dijkstra
 from helper import distance, intersect2, plotViabilityGraph, plotPointsAndObstacles
 import problems
+from problems import problemParameters
 
 
 class Graph:
@@ -91,13 +93,14 @@ def convertPathToCoordinates(path, obstacles, start, goal, budget, epsilon):
     return tuple(map(tuple, result))
 
 
-def main(problem):
+def main(problem, epsilon=None):
     start = problem.start
     goal = problem.goal
     obstacles = problem.obstacles
     costs = problem.costs
     budget = problem.budget
-    epsilon = problem.epsilon
+    if epsilon is None:
+        epsilon = problem.epsilon
 
     graph = visibilityGraph(start, goal, obstacles, costs, budget)
     copiedGraph = createCopiesOfGraph(graph, budget, epsilon)
@@ -112,9 +115,17 @@ def main(problem):
         )
         print("Shortest path:", nicePath)
 
-    plotPointsAndObstacles(start, goal, obstacles, nicePath)
-    plotViabilityGraph(start, goal, obstacles, graph, nicePath)
+    print(f"Shortest path from {start} to {goal} is {nicePath}")
+    # plotPointsAndObstacles(start, goal, obstacles, nicePath)
+    # plotViabilityGraph(start, goal, obstacles, graph, nicePath)
 
 
+pklProblem1 = problems.loadProblem("problem1.pkl")
+pklProblem2 = problems.loadProblem("problem2.pkl")
 if __name__ == "__main__":
-    main(problems.problem2)
+    epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
+    for epsilon in epsilons:
+        start_time = time.time()
+        main(pklProblem2, epsilon)  # Use the problem you defined
+        end_time = time.time()
+        print(f"Epsilon {epsilon}: Execution time {end_time - start_time} seconds")
