@@ -28,7 +28,7 @@ calculateButton.addEventListener('click', () => {
     const problem = problemSelect.value;
     const epsilon = epsilonRange.value;
 
-    // Make a POST request to the server to calculate the shortest path
+    // Make a POST request to the server to calculate the shortest path and get the Plotly figure data
     fetch('/calculate_shortest_path', {
         method: 'POST',
         headers: {
@@ -38,7 +38,12 @@ calculateButton.addEventListener('click', () => {
     })
     .then(response => response.json())
     .then(data => {
-        // Display the result (shortest path and execution time) in the resultDiv
-        resultDiv.textContent = `Shortest path: ${data.result}, Execution time: ${data.execution_time} seconds`;
+        // resultDiv.textContent = `Shortest path: ${data.result}, Execution time: ${data.execution_time} seconds`;
+        resultDiv.textContent = `Execution time: ${data.execution_time} seconds`;
+
+        const figData = JSON.parse(data.fig_data);
+
+        Plotly.newPlot('plotlyDiv', figData);
     });
 });
+

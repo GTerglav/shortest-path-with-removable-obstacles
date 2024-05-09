@@ -5,17 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shortest Path Solver</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-    <h1>Shortest Path Solver</h1>
-    <select id="problemSelect">
-        <option value="">Select a problem</option>
-    </select>
-    <input type="range" id="epsilonRange" min="0.00001" max="1" step="0.00001" value="1">
-    <span id="epsilonValue">1</span>
-    <button id="calculateButton">Calculate Shortest Path</button>
-    <div id="result"></div>
+    <div class="container">
+        <h1>Shortest Path Solver</h1>
+        <div class="form-container">
+            <select id="problemSelect">
+                <option value="">Select a problem</option>
+            </select>
+            <input type="text" id="epsilonRange" placeholder="Epsilon value" value="1">
+            <button id="calculateButton">Calculate Shortest Path</button>
+        </div>
+        <div id="result"></div>
+        <div id="plotlyDiv"></div>
 
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
+        <script src="{{ url_for('static', filename='main.js') }}"></script>
+    </div>
 </body>
+
+    
 </html>
