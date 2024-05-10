@@ -104,30 +104,45 @@ def main(problem, epsilon=None):
     if epsilon is None:
         epsilon = problem.epsilon
 
+    startTime = time.time()
     graph = visibilityGraph(start, goal, obstacles, costs, budget)
-    copiedGraph = createCopiesOfGraph(graph, budget, epsilon)
+    endTime = time.time()
+    print(f"Viability graph construction time {endTime - startTime} seconds")
 
+    startTime = time.time()
+    copiedGraph = createCopiesOfGraph(graph, budget, epsilon)
     start_vertex = -1
     targetVertex = -2
     shortestPath = dijkstra(copiedGraph, start_vertex, targetVertex)
+    endTime = time.time()
+    print(f"Copying graph and dijsktra time {endTime - startTime} seconds")
 
     if shortestPath:
         nicePath = convertPathToCoordinates(
             shortestPath, obstacles, start, goal, budget, epsilon
         )
-        print("Shortest path:", nicePath)
+        # plotPointsAndObstacles(start, goal, obstacles, nicePath)
+        print(f"Shortest path from {start} to {goal} is {nicePath}")
 
-    print(f"Shortest path from {start} to {goal} is {nicePath}")
-    # plotPointsAndObstacles(start, goal, obstacles, nicePath)
     # plotViabilityGraph(start, goal, obstacles, graph, nicePath)
 
 
-pklProblem1 = problems.loadProblem("problem1.pkl")
-pklProblem2 = problems.loadProblem("problem2.pkl")
+pklProblem40 = problems.loadProblemPickle("problem40.pkl")
+pklProblem200 = problems.loadProblemPickle("problem200.pkl")
+# n = 180, time = 36s
+pklProblem400 = problems.loadProblemPickle("problem400.pkl")
+# n = 360, time = 306s ->
+pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 if __name__ == "__main__":
-    epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
-    for epsilon in epsilons:
-        start_time = time.time()
-        main(pklProblem2, epsilon)  # Use the problem you defined
-        end_time = time.time()
-        print(f"Epsilon {epsilon}: Execution time {end_time - start_time} seconds")
+    startTime2 = time.time()
+    main(pklProblem40)
+    endTime2 = time.time()
+    print(f"Execution time {endTime2 - startTime2} seconds")
+
+    ######## Code for measuring time for different epsilons #########
+    # epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
+    # for epsilon in epsilons:
+    #     start_time = time.time()
+    #     main(problems.problem2, epsilon)  # Use the problem you defined
+    #     end_time = time.time()
+    #     print(f"Epsilon {epsilon}: Execution time {end_time - start_time} seconds")

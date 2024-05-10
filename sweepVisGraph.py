@@ -257,7 +257,11 @@ def main(problem, epsilon=None):
     if epsilon is None:
         epsilon = problem.epsilon
 
+    startTime = time.time()
     graph = viabilityGraph(start, goal, obstacles, costs, budget)
+    endTime = time.time()
+    print(f"Viability graph construction time {endTime - startTime} seconds")
+
     copiedGraph = createCopiesOfGraph(graph, start, goal, budget, epsilon)
 
     startVertex = (-1, -1, -1)
@@ -266,7 +270,7 @@ def main(problem, epsilon=None):
 
     if shortestPath:
         nicePath = shortestPath[1:-1]
-        # helper.plotPointsAndObstaclesSweep(start, goal, obstacles, nicePath)
+        helper.plotPointsAndObstaclesSweep(start, goal, obstacles, nicePath)
         # plotGraph(graph, start, goal, obstacles)
         print(f"Shortest path from {start} to {goal} is {nicePath}")
         return nicePath
@@ -274,14 +278,27 @@ def main(problem, epsilon=None):
         return []
 
 
-pklProblem1 = problems.loadProblem("problem1.pkl")
-pklProblem2 = problems.loadProblem("problem2.pkl")
-if __name__ == "__main__":
-    main(problems.problem4)
+pklProblem40 = problems.loadProblemPickle("problem40.pkl")
+# n ~= 40, time = 1s
+pklProblem200 = problems.loadProblemPickle("problem200.pkl")
+# n = 180, time = 60s
+pklProblem400 = problems.loadProblemPickle("problem400.pkl")
+# n = 360, time = 480s which is 2^3 * time more than before
+pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
+# n = 864, time = 6666s ~= (864/360)^3 * 480 = 6200
 
+## conclusion n^3 checks out
+
+if __name__ == "__main__":
+    startTime = time.time()
+    main(pklProblem200)
+    endTime = time.time()
+    print(f"Execution time {endTime - startTime} seconds")
+
+    ######## Code for measuring time for different epsilons #########
     # epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
     # for epsilon in epsilons:
-    #     start_time = time.time()
-    #     main(problems.problem2, epsilon)
-    #     end_time = time.time()
-    #     print(f"Epsilon {epsilon}: Execution time {end_time - start_time} seconds")
+    #     startTime = time.time()
+    #     main(problems.problem4, epsilon)
+    #     endTime = time.time()
+    #     print(f"Epsilon {epsilon}: Execution time {endTime - startTime} seconds")

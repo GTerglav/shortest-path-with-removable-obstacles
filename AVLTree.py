@@ -23,7 +23,7 @@ class AVLTree:
     def rotateRight(self, y):
         x = y.left
         if x is None:
-            print("Avl tree rotate right not working")
+            # print("Avl tree rotate right not working")
             return y
         T2 = x.right
 
@@ -38,7 +38,7 @@ class AVLTree:
     def rotateLeft(self, x):
         y = x.right
         if y is None:
-            print("Avl tree rotate left not working")
+            # print("Avl tree rotate left not working")
             return x
         T2 = y.left
 
