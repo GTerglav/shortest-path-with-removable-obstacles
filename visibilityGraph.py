@@ -59,8 +59,10 @@ def createCopiesOfGraph(graph, budget, epsilon):
         for k in range(numCopies):
             new_i = (i * numCopies) + k
             for j, cost, length in neighbors:
-                new_k = math.ceil(k + cost)  # index of j with which we want to connect
-                if new_k <= budget:
+                new_k = max(
+                    k, math.floor((k * epsilon + cost) / epsilon)
+                )  # index of j with which we want to connect
+                if new_k <= numCopies - 1:
                     new_j = (
                         j
                     ) * numCopies + new_k  # so thid vertex is indexed as j_k' and we connect it to i_k

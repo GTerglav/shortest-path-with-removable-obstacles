@@ -192,12 +192,12 @@ def createCopiesOfGraph(graph, start, goal, budget, epsilon):
     for vertex, neighbors in graph.vertices.items():
         numCopies = math.ceil(budget / epsilon) + 1
         for k in range(numCopies):
-            new_vertex = (vertex[0], vertex[1], k)
+            newVertex = (vertex[0], vertex[1], k)
             for neighbor, cost, length in neighbors:
-                new_k = math.ceil(k + cost)
-                if new_k <= budget:
-                    new_neighbor = (neighbor[0], neighbor[1], new_k)
-                    newGraph.addEdge(new_vertex, new_neighbor, 0, length)
+                new_k = max(k, math.floor((k * epsilon + cost) / epsilon))
+                if new_k <= numCopies - 1:
+                    newNeighbor = (neighbor[0], neighbor[1], new_k)
+                    newGraph.addEdge(newVertex, newNeighbor, 0, length)
 
     # add start and sink and connect them to copies
     newStart = (-1, -1, -1)
@@ -266,23 +266,22 @@ def main(problem, epsilon=None):
 
     if shortestPath:
         nicePath = shortestPath[1:-1]
+        # helper.plotPointsAndObstaclesSweep(start, goal, obstacles, nicePath)
+        # plotGraph(graph, start, goal, obstacles)
         print(f"Shortest path from {start} to {goal} is {nicePath}")
         return nicePath
     else:
         return []
 
-    # helper.plotPointsAndObstaclesSweep(start, goal, obstacles, nicePath)
-    # plotGraph(graph, start, goal, obstacles)
-
 
 pklProblem1 = problems.loadProblem("problem1.pkl")
 pklProblem2 = problems.loadProblem("problem2.pkl")
 if __name__ == "__main__":
-    main(pklProblem2)
+    main(problems.problem4)
 
     # epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
     # for epsilon in epsilons:
     #     start_time = time.time()
-    #     main(pklProblem2, epsilon)
+    #     main(problems.problem2, epsilon)
     #     end_time = time.time()
     #     print(f"Epsilon {epsilon}: Execution time {end_time - start_time} seconds")

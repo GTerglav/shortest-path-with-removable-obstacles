@@ -17,7 +17,7 @@ class problemParameters:
         self.epsilon = epsilon
 
 
-problemSimple = problemParameters(
+problem0 = problemParameters(
     [0, 0],
     [5, 0],
     [[[2, 1], [2, -0.5]]],
@@ -84,6 +84,19 @@ problem4 = problemParameters(
     costs=[4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
     budget=8,
     epsilon=1,
+)
+
+problemError = problemParameters(
+    start=[0, 0],
+    goal=[7, 0],
+    obstacles=[
+        [[1, 20], [1, -20], [2, -20], [2, 20]],
+        [[3, 0], [3.5, 20], [4, 0], [3.5, -20]],
+        [[6, 20], [6, -20], [5, -20], [5, 20]],
+    ],
+    costs=[3.5, 8, 3.5],
+    budget=6,
+    epsilon=0.5,
 )
 
 
