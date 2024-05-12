@@ -150,12 +150,135 @@ def viabilityGraph(start, goal, obstacles, costs, budget):
 
 ######################## Now to sparsify the graph ###############
 
+#TODO
+# Computes cost of edge (v,u)
+def cost(v, u, obstacles, costs):
+    return 0
 
+#TODO
+# Finds first positive slope segmenet that intersects (v,u)
+def positiveObstacleSegment(v, u, obstacles):
+    return ((0, 0), (1, 1))
+
+#TODO
+# Finds first negative slope segmenet that intersects (v,u)
+def negativeObstacleSegment(v, u, obstacles):
+    return ((0, 0), (1, 1))
+
+#TODO
+# This new graph should start as the viability graph
+# vertical == True then vertical split line otherwise horizontal
+def Recurse(vertices, start, goal, obstacles, costs, budget, vertical=True):
+    # This function is going to returna list if all edges and vertices that need to be added to our viability graph
+    newVertices = []
+    newEdges = []
+
+    if len(vertices) <= 1:
+        return [newVertices, newEdges]
+
+    # get median x coordiante
+    coordinates = []
+    for vertex in vertices:
+        if vertical:
+            coordinates.append(vertex[0])
+        else:
+            coordinates.append(vertex[1])
+    median = statistics.median(coordinates)
+
+    for vertex in vertices:
+        if vertical:
+            projectedVertex = (median, vertex[1])
+        else:
+            projectedVertex = (vertex[0], median)
+        cost = cost(vertex, projectedVertex, obstacles, costs)
+
+        # a) First add the projected vertex to graph
+        if cost <= budget:
+            # newGraph.addVertex(projectedVertex)
+            # newGraph.addEdge(vertex,projectedVertex, cost, helper.distance(vertex,projectedVertex))
+            newVertices.append(projectedVertex)
+            newEdges.append(
+                (
+                    vertex,
+                    projectedVertex,
+                    cost,
+                    helper.distance(vertex, projectedVertex),
+                )
+            )
+
+        # b),c) Check first intersecting obstacle segments
+        posSegment = positiveObstacleSegment(vertex, projectedVertex, obstacles)
+        negSegment = negativeObstacleSegment(vertex, projectedVertex, obstacles)
+        if posSegment is not None:
+            # Do stuff
+            "TODO"
+
+        if negSegment is not None:
+            # again do stuff
+            "TODO"
+
+        # d) Connect adjacent "Steiner" (new) vertices
+        sortedVertices = sorted(newVertices, key=lambda vertex: vertex[1])
+        for i in range(len(sortedVertices) - 1):
+            v = sortedVertices[i]
+            u = sortedVertices[i + 1]
+            cost = cost(v, u, obstacles, costs)
+            if cost <= budget:
+                newEdges.append(
+                    (
+                        v,
+                        u,
+                        cost,
+                        helper.distance(v, u),
+                    )
+                )
+
+    # e) split vertices into two groups
+    # Should be named bot and top if horizontal
+    leftVertices = []
+    rightVertices = []
+    for vertex in vertices:
+        if vertical:
+            if vertex[0] <= median:
+                leftVertices.append(vertex)
+            else:
+                rightVertices.append(vertex)
+        else:
+            if vertex[1] <= median:
+                leftVertices.append(vertex)
+            else:
+                rightVertices.append(vertex)
+
+    return [
+        newVertices
+        + Recurse(rightVertices, start, goal, obstacles, costs, budget)[0]
+        + Recurse(leftVertices, start, goal, obstacles, costs, budget)[0],
+        newEdges
+        + Recurse(rightVertices, start, goal, obstacles, costs, budget)[1]
+        + Recurse(leftVertices, start, goal, obstacles, costs, budget)[1],
+    ]
+
+#TODO
 def sparsify(graph, start, goal, obstacles, costs, budget):
-    xCoordinates = []
-    for vertex in graph.vertices:
-        xCoordinates.append(vertex[0])
-        
-    xMedian = statistics.median(xCoordinates)
 
-    return "TODO"
+    # 1. Step add new edges and vertices
+    newVerticesV, newEdgesV = Recurse(graph, start, goal, obstacles, costs, budget, True)
+
+    for vertex in newVerticesV:
+        graph.addVertex(vertex)
+
+    for beginning, end, cost, distance in newEdgesV:
+        graph.addEdge(beginning, end, cost, distance)
+
+    # 2. Step add new edges and vertices
+    newVerticesH, newEdgesH = Recurse(graph, start, goal, obstacles, costs, budget, False)
+
+    for vertex in newVerticesH:
+        graph.addVertex(vertex)
+
+    for beginning, end, cost, distance in newEdgesH:
+        graph.addEdge(beginning, end, cost, distance)
+
+
+    #3. Add edges between consecutive edges on boundaries
+    return graph
