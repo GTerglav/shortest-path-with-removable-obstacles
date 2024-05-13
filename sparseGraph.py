@@ -150,22 +150,26 @@ def viabilityGraph(start, goal, obstacles, costs, budget):
 
 ######################## Now to sparsify the graph ###############
 
-#TODO
+
+# TODO
 # Computes cost of edge (v,u)
 def cost(v, u, obstacles, costs):
     return 0
 
-#TODO
+
+# TODO
 # Finds first positive slope segmenet that intersects (v,u)
 def positiveObstacleSegment(v, u, obstacles):
     return ((0, 0), (1, 1))
 
-#TODO
+
+# TODO
 # Finds first negative slope segmenet that intersects (v,u)
 def negativeObstacleSegment(v, u, obstacles):
     return ((0, 0), (1, 1))
 
-#TODO
+
+# TODO
 # This new graph should start as the viability graph
 # vertical == True then vertical split line otherwise horizontal
 def Recurse(vertices, start, goal, obstacles, costs, budget, vertical=True):
@@ -258,11 +262,14 @@ def Recurse(vertices, start, goal, obstacles, costs, budget, vertical=True):
         + Recurse(leftVertices, start, goal, obstacles, costs, budget)[1],
     ]
 
-#TODO
+
+# TODO
 def sparsify(graph, start, goal, obstacles, costs, budget):
 
     # 1. Step add new edges and vertices
-    newVerticesV, newEdgesV = Recurse(graph, start, goal, obstacles, costs, budget, True)
+    newVerticesV, newEdgesV = Recurse(
+        graph, start, goal, obstacles, costs, budget, True
+    )
 
     for vertex in newVerticesV:
         graph.addVertex(vertex)
@@ -271,7 +278,9 @@ def sparsify(graph, start, goal, obstacles, costs, budget):
         graph.addEdge(beginning, end, cost, distance)
 
     # 2. Step add new edges and vertices
-    newVerticesH, newEdgesH = Recurse(graph, start, goal, obstacles, costs, budget, False)
+    newVerticesH, newEdgesH = Recurse(
+        graph, start, goal, obstacles, costs, budget, False
+    )
 
     for vertex in newVerticesH:
         graph.addVertex(vertex)
@@ -279,6 +288,5 @@ def sparsify(graph, start, goal, obstacles, costs, budget):
     for beginning, end, cost, distance in newEdgesH:
         graph.addEdge(beginning, end, cost, distance)
 
-
-    #3. Add edges between consecutive edges on boundaries
+    # 3. Add edges between consecutive edges on boundaries
     return graph

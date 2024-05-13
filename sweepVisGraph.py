@@ -28,6 +28,7 @@ class Graph:
 ############################### Viability algorithm #############################################
 
 
+# Returns cost of path from p to w. wMinusOne is vertex before w in angular ordering
 def viable(p, w, wMinusOne, costToWMinusOne, root, obstacles, costs):
     # check if p and w are in same obstacle segment
     sameObstacleResult = helper.inSameObstacleSegment(p, w, obstacles, costs)
@@ -88,20 +89,13 @@ def viable(p, w, wMinusOne, costToWMinusOne, root, obstacles, costs):
             return totalCost + helper.costOfSegment(w, wMinusOne, root)
 
 
+# Returns viable vertices from v and costs of those direct paths
 def viableVerticesFromV(v, points, obstacles, costs, budget):
-    # here sort vertices accoring to angle from v and distance from v
+    # Sort vertices accoring to clockwise angle from v and distance from v
     sortedVertices = sorted(points, key=lambda x: helper.compareAngle(x, v))
 
     T = AVLTree()
     root = None
-
-    # Notes to self:
-    # here need to store obstacle edges that intersect with halfline form v
-    # But I dont think i need to store them in avl tree because i have to check them all for intersection anyway
-    # not just the leftmost one like in visibility algorithm. Ok maybe for removal and insertion AVL is nice.
-    # But i got through all obstacles for every halfline so this does nothing its just naive right?
-    # No i just go through incident edges for every halfline. Just at start i got through all obstacles.
-    # So this should be faster
 
     # Insert edges that intersect into tree
     for j, obstacle in enumerate(obstacles):
@@ -119,24 +113,6 @@ def viableVerticesFromV(v, points, obstacles, costs, budget):
     for w in sortedVertices:
         if not np.array_equal(v, w):
 
-            # WrongCode but maybe usefull later
-            # Add the edges to T with distance based on next w
-            # if wMinusOne is not None:
-            #     for k, obstacle in enumerate(obstacles):
-            #         for i in range(len(obstacle)):
-            #             start = obstacle[i]
-            #             end = obstacle[(i + 1) % len(obstacle)]
-            #             if (
-            #                 helper.ccw(v, wMinusOne, start) <= 0
-            #                 and np.array_equal(end, wMinusOne)
-            #             ) or (
-            #                 helper.ccw(v, wMinusOne, end) <= 0
-            #                 and np.array_equal(start, wMinusOne)
-            #             ):
-            #                 t = helper.intersectLine(v, w, start, end)
-            #                 if 0 < t < 1:
-            #                     root = T.insert(root, (start, end, t, costs[k]))
-
             costOfPathToW = viable(
                 v, w, wMinusOne, costToWMinusOne, root, obstacles, costs
             )
@@ -144,8 +120,7 @@ def viableVerticesFromV(v, points, obstacles, costs, budget):
             if costOfPathToW <= budget:
                 W.add((tuple(w), costOfPathToW))
 
-            # need to delete from T edge that line on counter clockwise side of line
-            # But all edges that include w should be on the counter clockwise side so i can just delete them all
+            # But all edges that include w should be on the counter clockwise side so I can just delete them all
             root = T.deleteByVertex(root, w)
 
             # need to insert into T edges that include w and lie on the clockwise side of the line
@@ -161,7 +136,7 @@ def viableVerticesFromV(v, points, obstacles, costs, budget):
                             (
                                 start,
                                 end,
-                                # I dont want two to have same distance M
+                                # I dont want two of the same key for avl trees
                                 # Maybe should sort them by clockwise angle??? I dont know this is wrong
                                 (helper.distance(v, start) + helper.distance(v, end))
                                 / 2,
@@ -174,6 +149,7 @@ def viableVerticesFromV(v, points, obstacles, costs, budget):
     return W
 
 
+# Returns viability graph
 def viabilityGraph(start, goal, obstacles, costs, budget):
     points = np.vstack((start, goal, np.vstack(obstacles)))
     graph = Graph()
@@ -213,6 +189,7 @@ def createCopiesOfGraph(graph, start, goal, budget, epsilon):
     return newGraph
 
 
+# Plots the viablity graph
 def plotGraph(graph, start, goal, obstacles):
     # Plot edges
     for vertex, edges in graph.vertices.items():
@@ -247,6 +224,7 @@ def plotGraph(graph, start, goal, obstacles):
     plt.show()
 
 
+# Returns shortest path for given problem
 def main(problem, epsilon=None):
     start = problem.start
     goal = problem.goal
@@ -270,7 +248,7 @@ def main(problem, epsilon=None):
 
     if shortestPath:
         nicePath = shortestPath[1:-1]
-        helper.plotPointsAndObstaclesSweep(start, goal, obstacles, nicePath)
+        # helper.plotPointsAndObstaclesSweep(start, goal, obstacles, nicePath)
         # plotGraph(graph, start, goal, obstacles)
         print(f"Shortest path from {start} to {goal} is {nicePath}")
         return nicePath
@@ -286,6 +264,7 @@ pklProblem400 = problems.loadProblemPickle("problem400.pkl")
 # n = 360, time = 480s which is 2^3 * time more than before
 pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 # n = 864, time = 6666s ~= (864/360)^3 * 480 = 6200
+# All of the running time is just for the construction of viability graph
 
 ## conclusion n^3 checks out
 
