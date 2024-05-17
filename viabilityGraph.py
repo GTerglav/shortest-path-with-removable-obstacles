@@ -6,6 +6,9 @@ from helper import distance, intersect2, plotViabilityGraph, plotPointsAndObstac
 import problems
 from problems import problemParameters
 
+# Naive construction of viability graph O(n^3)
+# For now includes a bug that add an edge that shouldnt be there if the 3 points are colinear
+
 
 class Graph:
     def __init__(self):
@@ -17,9 +20,8 @@ class Graph:
     def addEdge(self, start, end, cost, length):
         self.vertices.setdefault(start, []).append((end, cost, length))
 
-
-def visibilityGraph(start, goal, obstacles, costs, budget):
-    # Construct visibility graph
+# Construct viability graph
+def viabilityGraph(start, goal, obstacles, costs, budget):
     points = np.vstack((start, goal, np.vstack(obstacles)))
     graph = Graph()
     for i, p1 in enumerate(points):
@@ -105,7 +107,7 @@ def main(problem, epsilon=None):
         epsilon = problem.epsilon
 
     startTime = time.time()
-    graph = visibilityGraph(start, goal, obstacles, costs, budget)
+    graph = viabilityGraph(start, goal, obstacles, costs, budget)
     endTime = time.time()
     print(f"Viability graph construction time {endTime - startTime} seconds")
 
