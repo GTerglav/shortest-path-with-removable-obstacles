@@ -265,7 +265,7 @@ def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
 
 
 def loadProblemPickle(filename):
-    folderPath = "generatedProblems"
+    folderPath = "src\\generatedProblems"
     filePath = os.path.join(folderPath, filename)
     with open(filePath, "rb") as f:
         problem = pickle.load(f)

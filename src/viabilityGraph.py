@@ -20,6 +20,7 @@ class Graph:
     def addEdge(self, start, end, cost, length):
         self.vertices.setdefault(start, []).append((end, cost, length))
 
+
 # Construct viability graph
 def viabilityGraph(start, goal, obstacles, costs, budget):
     points = np.vstack((start, goal, np.vstack(obstacles)))
@@ -30,7 +31,7 @@ def viabilityGraph(start, goal, obstacles, costs, budget):
             if i != j:
                 totalCost = 0
                 for l, obs in enumerate(obstacles):
-                    # If the line segment doesn't intersect2 but p1 and p2 belong to the same obstacle segment
+                    # If the line segment doesn't intersect but p1 and p2 belong to the same obstacle segment
                     if np.any(np.all(obs == p1, axis=1)) and np.any(
                         np.all(obs == p2, axis=1)
                     ):
@@ -43,7 +44,7 @@ def viabilityGraph(start, goal, obstacles, costs, budget):
                         if intersect2(p1, p2, obs[0], obs[-1]):
                             totalCost += costs[l]
                         else:
-                            # Check for intersect2ion with individual edges of the obstacle
+                            # Check for intersection with individual edges of the obstacle
                             for k in range(len(obs) - 1):
                                 if intersect2(p1, p2, obs[k], obs[k + 1]):
                                     totalCost += costs[l]
@@ -123,7 +124,7 @@ def main(problem, epsilon=None):
         nicePath = convertPathToCoordinates(
             shortestPath, obstacles, start, goal, budget, epsilon
         )
-        # plotPointsAndObstacles(start, goal, obstacles, nicePath)
+        plotPointsAndObstacles(start, goal, obstacles, nicePath)
         print(f"Shortest path from {start} to {goal} is {nicePath}")
 
     # plotViabilityGraph(start, goal, obstacles, graph, nicePath)

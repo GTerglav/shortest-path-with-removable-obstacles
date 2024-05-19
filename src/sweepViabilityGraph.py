@@ -30,6 +30,7 @@ class Graph:
 
 # Returns cost of path from p to w. wMinusOne is vertex before w in angular ordering
 def viable(p, w, wMinusOne, costToWMinusOne, root, obstacles, costs):
+    
     # check if p and w are in same obstacle segment
     sameObstacleResult = helper.inSameObstacleSegment(p, w, obstacles, costs)
     if sameObstacleResult is not None:
@@ -66,7 +67,6 @@ def viable(p, w, wMinusOne, costToWMinusOne, root, obstacles, costs):
                 stack.append(node.right)
 
         # If the cost is counted twice we have to divide by two if its counted once then its full cost
-
         if len(costDict) == 0:
             totalCost /= 2
         else:
@@ -77,7 +77,6 @@ def viable(p, w, wMinusOne, costToWMinusOne, root, obstacles, costs):
     # If they are colinear then we know the cost to w_-1 just need the cost from w_-1 to w
     else:
         totalCost = costToWMinusOne
-
         obstacleResult = helper.inSameObstacleSegment(w, wMinusOne, obstacles, costs)
         if obstacleResult is not None:
             obstacle, cost = obstacleResult
@@ -112,7 +111,6 @@ def viableVerticesFromV(v, points, obstacles, costs, budget):
     costToWMinusOne = 0
     for w in sortedVertices:
         if not np.array_equal(v, w):
-
             costOfPathToW = viable(
                 v, w, wMinusOne, costToWMinusOne, root, obstacles, costs
             )
@@ -270,7 +268,7 @@ pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 
 if __name__ == "__main__":
     startTime = time.time()
-    main(pklProblem200)
+    main(pklProblem40)
     endTime = time.time()
     print(f"Execution time {endTime - startTime} seconds")
 

@@ -8,7 +8,7 @@ from problems import (
     problemError,
     problemParameters,
 )
-from sweepVisGraph import main
+from sweepViabilityGraph import main
 import time
 import plotly.graph_objects as go
 

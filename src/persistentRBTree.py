@@ -119,6 +119,95 @@ class persistentRBTree:
             print("error: wrong time")
             return lastRight
 
+    # find and return item in tree with smalles key value >= to key at time.
+    # Like access only here we save last left node
+    def leftAccess(self, node, key, time, lastLeft):
+        if node is None:
+            return lastLeft
+
+        # First check correct time should always be true though
+        if node.timeCreated <= time < node.timeDeleted:
+
+            # found
+            if node.key == key:
+                return node
+
+            # go left
+            if node.key > key:
+                return self.leftAccess(
+                    self.getLatestChild(node, time, "left"), key, time, node
+                )  # Update lastLeft to this node
+
+            # go right
+            if node.key < key:
+                return self.leftAccess(
+                    self.getLatestChild(node, time, "right"), key, time, lastLeft
+                )
+
+        else:
+            print("error: wrong time")
+            return lastLeft
+
+    # Returns all items with lB <= key uB at time
+    def accessRange(self, lowerBound, upperBound, time):
+        root = self.getCurrentRoot(time)
+
+        # Find the node with smallest key that is greater or equal to lower bound
+        lowestNode = self.leftAccess(root, lowerBound, time, None)
+
+        # We will now search the tree from lowest node.
+        # First we go to right parent (if it exists) and right child, since they are both bigger
+        # We check that they are smaller then lowerBound and add them
+        # This step is done in inorderHelperTR (top right)
+
+        # Then From right child we can go left or right (inorderHelperLR)
+        # If we go left we know that all children will be in our range so we add the whole subtree (getAllChildren)
+        # If we go right we again do (inorderHelperLR)
+
+        # We repeat until we meet a node with key higher than upper bound
+
+        def getAllChildren(node):
+            if node is None:
+                return []
+
+            leftChild = self.getLatestChild(node, time, "left")
+            rightChild = self.getLatestChild(node, time, "right")
+
+            return (
+                getAllChildren(leftChild)
+                + [(node, node.key)]
+                + getAllChildren(rightChild)
+            )
+
+        def inorderHelperLR(node):
+            if node is None or node.key > upperBound:
+                return []
+            leftChild = self.getLatestChild(node, time, "left")
+            rightChild = self.getLatestChild(node, time, "right")
+            return (
+                getAllChildren(leftChild)
+                + [(node, node.key)]
+                + inorderHelperLR(rightChild)
+            )
+
+        def inorderHelperTR(node):
+            if node is None or node.key > upperBound:
+                return []
+
+            parent = self.getCurrentParent(node, time)
+            rightChild = self.getLatestChild(node, time, "right")
+
+            if parent and parent.key > node.key and parent.key <= upperBound:
+                return (
+                    inorderHelperTR(parent)
+                    + [(node, node.key)]
+                    + inorderHelperLR(rightChild)
+                )
+            else:
+                return [(node, node.key)] + inorderHelperLR(rightChild)
+
+        return inorderHelperTR(lowestNode)
+
     # Similar to access, instead returns the last real node instead of last right.
     # Finds parent for insertion
     def findParent(self, node, key, time, lastNode):
@@ -452,46 +541,75 @@ class persistentRBTree:
         root = self.getCurrentRoot(time)
         root.colors[time] = "black"
 
-    ## CHATGPT DELETE ## Prompted by above code
+    ## CHATGPT DELETE  implementation ###
 
+    def transplant(self, u, v, time):
+        parent = self.getCurrentParent(u, time)
+        if parent is None:
+            self.roots[time] = v
+        else:
+            direction = (
+                "left" if u == self.getLatestChild(parent, time, "left") else "right"
+            )
+            self.addPointer([time, direction, v], parent, time)
+        if v is not None:
+            v.parents[time] = parent
+
+    # Deletes node with largest key <= given key at time
     def delete(self, key, time):
-        # Find the node to delete
         root = self.getCurrentRoot(time)
-        node_to_delete = self.access(root, key, time, None)
-        if node_to_delete is None:
+        nodeToDelete = self.access(root, key, time, None)
+        if nodeToDelete is None:
             return  # Node not found
 
-        # If the node has two children, find its in-order successor
-        if self.getLatestChild(node_to_delete, time, "left") and self.getLatestChild(
-            node_to_delete, time, "right"
-        ):
-            successor = self.minimum(
-                self.getLatestChild(node_to_delete, time, "right"), time
-            )
-            node_to_delete.key, node_to_delete.val = successor.key, successor.val
-            node_to_delete = successor
+        original_color = self.getCurrentColor(nodeToDelete, time)
 
-        # At this point, node_to_delete has at most one child
-        child = self.getLatestChild(
-            node_to_delete, time, "right"
-        ) or self.getLatestChild(node_to_delete, time, "left")
-
-        # Update parents
-        parent = self.getCurrentParent(node_to_delete, time)
-        if parent:
-            direction = "left" if parent.key > node_to_delete.key else "right"
-            self.addPointer([time, direction, child], parent, time)
+        if self.getLatestChild(nodeToDelete, time, "left") is None:
+            child = self.getLatestChild(nodeToDelete, time, "right")
+            self.transplant(nodeToDelete, child, time)
+        elif self.getLatestChild(nodeToDelete, time, "right") is None:
+            child = self.getLatestChild(nodeToDelete, time, "left")
+            self.transplant(nodeToDelete, child, time)
         else:
-            self.roots[time] = child
+            successor = self.minimum(
+                self.getLatestChild(nodeToDelete, time, "right"), time
+            )
+            original_color = self.getCurrentColor(successor, time)
+            child = self.getLatestChild(successor, time, "right")
+            if self.getCurrentParent(successor, time) == nodeToDelete:
+                if child is not None:
+                    child.parents[time] = successor
+            else:
+                self.transplant(successor, child, time)
+                successor.pointers.append(
+                    [time, "right", self.getLatestChild(nodeToDelete, time, "right")]
+                )
+                if self.getLatestChild(nodeToDelete, time, "right") is not None:
+                    self.getLatestChild(nodeToDelete, time, "right").parents[
+                        time
+                    ] = successor
+            self.transplant(nodeToDelete, successor, time)
+            successor.pointers.append(
+                [time, "left", self.getLatestChild(nodeToDelete, time, "left")]
+            )
+            if self.getLatestChild(nodeToDelete, time, "left") is not None:
+                self.getLatestChild(nodeToDelete, time, "left").parents[
+                    time
+                ] = successor
+            successor.colors[time] = self.getCurrentColor(nodeToDelete, time)
 
-        if child:
-            child.parents[time] = parent
+        nodeToDelete.timeDeleted = time
 
-        # Node is logically deleted
-        node_to_delete.timeDeleted = time
-
-        if self.getCurrentColor(node_to_delete, time) == "black":
-            self.fixDelete(child, parent, time)
+        if original_color == "black":
+            self.fixDelete(
+                child,
+                (
+                    self.getCurrentParent(child, time)
+                    if child
+                    else self.getCurrentParent(nodeToDelete, time)
+                ),
+                time,
+            )
 
     def fixDelete(self, node, parent, time):
         while (
@@ -577,6 +695,23 @@ class persistentRBTree:
         if node:
             node.colors[time] = "black"
 
+    def inorderTraversal(self, time):
+        def inorderHelper(node):
+            if node is None:
+                return []
+
+            leftChild = self.getLatestChild(node, time, "left")
+            rightChild = self.getLatestChild(node, time, "right")
+
+            return (
+                inorderHelper(leftChild)
+                + [(node, node.key, node.val)]
+                + inorderHelper(rightChild)
+            )
+
+        root = self.getCurrentRoot(time)
+        return inorderHelper(root)
+
     def printTree(self, time):
         root = self.getCurrentRoot(time)
         self.printSubTree(root, time, "", True)
@@ -612,64 +747,38 @@ class persistentRBTree:
 
 tree = persistentRBTree()
 
-# Insert nodes
-tree.insert(10, "A", 1)
-tree.insert(20, "B", 1)
-tree.insert(15, "C", 1)
-tree.delete(10, 2)
-print("Tree at time 10:")
-tree.printTree(2)
-tree.insert(30, "E", 2)
-print("Tree at time 30:")
-tree.printTree(2)
-tree.insert(40, "F", 2)
-print("Tree at time 40:")
-tree.printTree(2)
-tree.delete(20, 3)
-print("Tree at time 20:")
-tree.printTree(2)
-tree.insert(35, "G", 3)
-print("Tree at time 35:")
-tree.printTree(2)
-tree.insert(45, "H", 3)
-print("Tree at time 45:")
-tree.printTree(2)
-
-print("Tree at time 1:")
-tree.printTree(1)
-
-print("Tree at time 2:")
-tree.printTree(2)
-
-print("Tree at time 3:")
-tree.printTree(3)
+# Tests
 
 # tree.insert(10, "A", 1)
-# tree.insert(20, "B", 2)
-# tree.insert(15, "C", 3)
-# tree.insert(25, "D", 4)
-# tree.insert(5, "E", 5)
-# tree.insert(3, "F", 6)
-# tree.insert(30, "G", 7)
-# tree.insert(35, "H", 8)
-# tree.insert(40, "I", 9)
+# tree.insert(20, "B", 1)
+# tree.insert(15, "C", 1)
 
-# # Print the tree structure at different times
+# tree.delete(10, 2)
+# tree.insert(30, "E", 2)
+# tree.insert(40, "F", 2)
+
+# tree.delete(20, 3)
+# tree.insert(35, "G", 3)
+# tree.insert(45, "H", 3)
+
+# tree.delete(15, 4)
+# tree.delete(30, 4)
+# tree.insert(7, "I", 4)
+
+
 # print("Tree at time 1:")
 # tree.printTree(1)
-# print("\nTree at time 2:")
+
+# print("Tree at time 2:")
 # tree.printTree(2)
-# print("\nTree at time 3:")
+
+# print("Tree at time 3:")
 # tree.printTree(3)
-# print("\nTree at time 4:")
+
+# print("Tree at time 4:")
 # tree.printTree(4)
-# print("\nTree at time 5:")
-# tree.printTree(5)
-# print("\nTree at time 6:")
-# tree.printTree(6)
-# print("\nTree at time 7:")
-# tree.printTree(7)
-# print("\nTree at time 8:")
-# tree.printTree(8)
-# print("\nTree at time 9:")
-# tree.printTree(9)
+
+# print("inorder Traversal:")
+# print(tree.inorderTraversal(4))
+# print("range:")
+# print(tree.accessRange(30, 40, 4))

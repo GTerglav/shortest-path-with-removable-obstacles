@@ -12,6 +12,8 @@ import helper
 from problems import problemParameters
 import problems
 
+import persistentRBTree
+
 ########### First copy all the code from sweepVisGraph to obtain the viability graph we want to sparsify
 
 
@@ -149,6 +151,13 @@ def viabilityGraph(start, goal, obstacles, costs, budget):
 
 
 ######################## Now to sparsify the graph ###############
+
+
+# Make tree from obstacle segments
+
+
+def makePersistentTree(obstacles, costs):
+    return
 
 
 # TODO
