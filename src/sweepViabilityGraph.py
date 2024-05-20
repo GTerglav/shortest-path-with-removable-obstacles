@@ -164,7 +164,7 @@ def createCopiesOfGraph(graph, start, goal, budget, epsilon):
 
 
 # Plots the viablity graph
-def plotGraph(graph, start, goal, obstacles):
+def plotGraph(graph, start, goal, obstacles, costs, budget, epsilon):
     # Plot edges
     for vertex, edges in graph.vertices.items():
         for edge in edges:
@@ -178,23 +178,43 @@ def plotGraph(graph, start, goal, obstacles):
                 linewidth=0.1,
             )
 
-    # Plot obstacles
-    for obstacle in obstacles:
+    # Plot obstacles and their costs
+    for i, obstacle in enumerate(obstacles):
         xCoords = [point[0] for point in obstacle]
         yCoords = [point[1] for point in obstacle]
-        plt.fill(xCoords, yCoords, "gray")
+        plt.fill(xCoords, yCoords, "gray", alpha=0.5)
         for vertex in obstacle:
             plt.plot(*vertex, "ko")  # Plot obstacle vertices
+        # Compute centroid of the obstacle for placing the cost text
+        centroid_x = np.mean(xCoords)
+        centroid_y = np.mean(yCoords)
+        plt.text(
+            centroid_x,
+            centroid_y,
+            f"{costs[i]}",
+            color="black",
+            fontsize=13,
+            ha="center",
+        )
 
     # Plot start and end vertices
     plt.scatter(start[0], start[1], color="green", label="Start")
     plt.scatter(goal[0], goal[1], color="red", label="Goal")
 
-    plt.legend()
+    # Display budget and epsilon values above the graph
+    plt.text(
+        0.5,
+        1.05,
+        f"Budget: {budget}, Epsilon: {epsilon}",
+        transform=plt.gca().transAxes,
+        ha="center",
+        fontsize=14,
+    )
+
     plt.xlabel("X")
     plt.ylabel("Y")
-    plt.title("Graph with Obstacles")
-    plt.grid(True)
+    # plt.title("Graph with Obstacles")
+    # plt.legend()
     plt.show()
 
 
@@ -222,8 +242,13 @@ def main(problem, epsilon=None):
 
     if shortestPath:
         nicePath = shortestPath[1:-1]
-        # helper.plotPointsAndObstaclesSweep(start, goal, obstacles, nicePath)
-        # plotGraph(graph, start, goal, obstacles)
+
+        # Plot the problem, then problem w/ shortest path, then viability graph
+        helper.plotProblem(start, goal, obstacles, budget, costs)
+        helper.plotPointsAndObstaclesSweep(
+            start, goal, obstacles, budget, costs, epsilon, nicePath
+        )
+        plotGraph(graph, start, goal, obstacles, costs, budget, epsilon)
         print(f"Shortest path from {start} to {goal} is {nicePath}")
         return nicePath
     else:
@@ -244,7 +269,7 @@ pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 
 if __name__ == "__main__":
     startTime = time.time()
-    main(problems.problemError3)
+    main(problems.problemError, 1)
     endTime = time.time()
     print(f"Execution time {endTime - startTime} seconds")
 

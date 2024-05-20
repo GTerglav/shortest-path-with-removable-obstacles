@@ -29,7 +29,9 @@ problems = {
 }
 
 
-def plotPointsAndObstacles(start, goal, obstacles, costs, budget, shortestPath=None):
+def plotPointsAndObstacles(
+    start, goal, obstacles, costs, budget, epsilon, shortestPath=None
+):
     fig = go.Figure()
 
     # Plot obstacles
@@ -91,7 +93,7 @@ def plotPointsAndObstacles(start, goal, obstacles, costs, budget, shortestPath=N
         )
 
     # Add budget annotation
-    budget_text = f"Budget: {budget}"
+    budget_text = f"Budget: {budget}, Epsilon: {epsilon}"
     fig.add_annotation(
         xref="paper",
         yref="paper",
@@ -162,6 +164,7 @@ def calculate_shortest_path():
             problem.obstacles,
             problem.costs,
             problem.budget,
+            epsilon,
             result,
         )
 

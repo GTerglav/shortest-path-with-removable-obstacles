@@ -3,10 +3,12 @@
 \usepackage{marvosym}
 \usepackage{amsmath}
 \usepackage{amsfonts}
+\usepackage{graphicx}
 \usepackage{babel}
-
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+
+\graphicspath{{images/}}
 
 \renewcommand\refname{Vir}
 
@@ -26,7 +28,18 @@
 
 Problem je posplošitev klasične verzije, v kateri se lahko oviram samo izogibamo. V $\mathbb{R}^2$ imamo dve točki s in t iščemo najkrajšo evklidsko pot med njima. Ovire v ravnini so konveksni večkotniki, vsak od njih ima ceno $c_i > 0$. Če imamo na voljo $C$ ''denarja'', katere ovire se splača odstraniti, da dosežemo najkrajšo pot? V resničem življenju lahko npr.\ načrtovalci mest spremenijo cestno omrežje, da dosežejo boljšo pretočnost in tako odstranijo ovire za neko ceno. Še en primer omenjen v članku so skladišča v katerih delajo roboti. Kako spremeniti postavitev ovir v skladišču, da se roboti hitreje premikajo okoli? 
 
-Naš problem je torej: ali obstaja pot dolžine $L$ in cene $C$ med začetkom in koncem? Ta problem je na žalost NP-težek, zato se bomo za polinomski čas morali zadovoljiti z algoritmom, ki ima neko napako vsaj v ceni. Še pred algoritmi iz članka pa je treba narediti t.~i.\ "viability graph" za naš problem.
+Preprost primer na katerem so ovire s cenami, začetek in konec, ter proračun lahko vidimo na sliki \ref{fig:errPr1}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{err1.png}
+    \caption{Primer problema.}
+    \label{fig:errPr1}
+\end{figure}
+
+
+Zanima nas torej: ali obstaja pot dolžine $L$ in cene $C$ med začetkom in koncem? Ta problem je na žalost NP-težek, zato se bomo za polinomski čas morali zadovoljiti z algoritmom, ki ima neko napako vsaj v ceni. Še pred algoritmi iz članka pa je treba narediti t.~i.\ "viability graph" za naš problem.
+
 
 
 % \subsection*{NP-težkost}
@@ -37,7 +50,7 @@ Naš problem je torej: ali obstaja pot dolžine $L$ in cene $C$ med začetkom in
 
 \subsection*{Viability graph}
 
-Začnimo s pomembnima opazkama o obnašanju najkrajše poti. Če bo šla naša pot skozi oviro, bo zaradi konveksnosti sekala samo dve stranici večkotnika. Smer bo pot spremenila samo v ogliščih večkotnikov. Tako bomo lahko problem prevedli na iskanje najkrajše poti v grafu, katerega vozlišča so vsa oglišča ovir ter točki $s$ in $t$. Označimo ta graf z $G = (V, E)$, kjer $(u,v) \in E$, če je vsota cen vseh ovir, ki jih prečka daljica $uv$ manjša ali enaka od našega proračuna $C$. Vsaka povezava v grafu ima dva parametra, dolžino in ceno. 
+Začnimo s pomembnima opazkama o obnašanju najkrajše poti. Če bo šla naša pot skozi oviro, bo zaradi konveksnosti sekala samo dve stranici večkotnika. Smer bo pot spremenila samo v ogliščih večkotnikov. Tako bomo lahko problem prevedli na iskanje najkrajše poti v grafu, katerega vozlišča so vsa oglišča ovir ter točki $s$ in $t$. Označimo ta graf z $G = (V, E)$, kjer $(u,v) \in E$, če je vsota cen vseh ovir, ki jih prečka daljica $\overline{uv}$ manjša ali enaka od našega proračuna $C$. Vsaka povezava v grafu ima dva parametra, dolžino in ceno. 
 
 Najprej sem se konstrukcije lotil naivno. Za vsak par točk sem za vsako oviro pogledal, če jo pot seka. Ta pristop ima časovno zahtevnost $O(n^3)$. Je pa tudi veliko robnih primerov, ki otežijo implementacijo. Trenutna implementacija ima problem, ko je na poti med ogliščema še tretje oglišče. Če sta drugo in tretje oglišče del iste ovire in gre pot po njeni notranjosti, tega nisem znal na lep način zaznati. Tako bi imela ta povezava premajhno ceno. Implementacija je v datoteki "viabilityGraph.py"
 
@@ -65,7 +78,14 @@ Robove ovir, ki jih $p$ seka, bomo shranili v dvojiško drevo, kar omogoča hitr
 
 Ta algoritem poženemo za vsako oglišče, ki ga imamo in tako lahko sestavimo naš viability graph. Potrebujemo pa še funkcijo, ki nam v 5. koraku izračuna ceno poti. Kot argument ji moramo podati točke $v$, $w_i$, $w_{i-1}$ ter ceno poti $vw_{i-1}$ in še naše dvojiško drevo ter vse ovire. Ključno je, da če $w_i$ in $w_{i-1}$ ležita na isti premici, lahko uporabimo to kar vemo o $w_{i-1}$.
 
-Ta funkcija z imenom \emph{viable} nato za vsak $w_i$ pregleda dvojiško drevo in sešteje cene vseh ovir, ki jih $vw$ seka. Že to je počasneje kot v verziji problema, ko je $C = 0$. Tam nas večino časa zanima samo rob z najmanjšim ključem v drevesu. Ta je najbližje $v$. Če obstaja in seka $\overline{vw_i}$ potem $w_i$ seveda ni viden. Celotno drevo pregledujemo tam samo, če sta $w_i$ in $w_{i-1}$ kolinearna in je $w_{i-1}$ viden. In tudi v tem primeru iščemo samo do prvega presečišča. Drugi problem je, da moramo vsakič na začetku preveriti, ali sta $v$ in $w_i$ del iste ovire. V trenutni implementaciji se tega lotim naivno, kar ima zahetvnost $O(n)$. Zaradi tega je zahtevnost celotnega algoritma skupaj spet $O(n^3)$, kljub temu da je zahtevnost tistega v \cite{BCKO} le $O(n^2 \log n)$. Prvi korak v izboljšavi algoritma je torej nov algoritem, ki preveri če sta dve oglišči del iste ovire. Implementacija se nahaja v datoteki \emph{sweepViabilityGraph.py}.
+Ta funkcija z imenom \emph{viable} nato za vsak $w_i$ pregleda dvojiško drevo in sešteje cene vseh ovir, ki jih $vw$ seka. Že to je počasneje kot v verziji problema, ko je $C = 0$. Tam nas večino časa zanima samo rob z najmanjšim ključem v drevesu. Ta je najbližje $v$. Če obstaja in seka $\overline{vw_i}$ potem $w_i$ seveda ni viden. Celotno drevo pregledujemo tam samo, če sta $w_i$ in $w_{i-1}$ kolinearna in je $w_{i-1}$ viden. In tudi v tem primeru iščemo samo do prvega presečišča. Drugi problem je, da moramo vsakič na začetku preveriti, ali sta $v$ in $w_i$ del iste ovire. V trenutni implementaciji se tega lotim naivno, kar ima zahetvnost $O(n)$. Zaradi tega je zahtevnost celotnega algoritma skupaj spet $O(n^3)$, kljub temu da je zahtevnost tistega v \cite{BCKO} le $O(n^2 \log n)$. Prvi korak v izboljšavi algoritma je torej nov algoritem, ki preveri če sta dve oglišči del iste ovire. Implementacija se nahaja v datoteki \emph{sweepViabilityGraph.py}. Rezultat algoritma, uporabljenega na našem problemu vidimo na sliki \ref{fig:errG1}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{errGraph1.png}
+    \caption{Viability graph.}
+    \label{fig:errG1}
+\end{figure}
 
 % \begin{algorithm}
 %     \caption{Vrnem ceno poti med $v$ in $w_i$}
@@ -105,16 +125,65 @@ Graf bi radi modificirali tako, da bi na novem grafu samo pognali Dijkstra algor
 Naj bo  zaradi preprostosti $K = min(\frac{C}{min_i \ c_i}, h)$, kjer je $h$ število ovir, $c_i$ pa njihove cene ter $\sum c_i = C$. Delimo vse cene z $K/C$, da je naš proračun za ovire na tako enak $K$. Potem naredimo $ \lceil{\frac{2K}{\epsilon}}\rceil + 1$  kopij vsakega vozličša v grafu $G$ in jih označimo z $v_0, v_{\epsilon/2}, v_{\epsilon}..., v_K$. Za vsak rob $(u, v) \in E$ s ceno $c$ in za vsak $0 \le i \le \lceil{\frac{2K}{\epsilon}}\rceil $, dodamo rob $(u_{i \epsilon/2}, v_{j \epsilon/2})$, kjer je $j\le\lceil{\frac{2K}{\epsilon}}\rceil$ največje celo število da velja $j\frac{\epsilon}{2}
  \le i \frac{\epsilon}{2} + c$. Dolžina povezav je enaka kot v originalnem grafu. Tako smo ceno zakodirali v vozlišča. Indeks v vozlišču nam pove, koliko smo plačali na poti do sedaj. Na koncu dodamo še novi vozlišči $s$ in $t$, ter vsakega od njiju povežemo z vsemi njunimi kopijami. Te povezave imajo dolžino $0$. Ker imajo povezave samo še dolžino, lahko sedaj za iskanje najkrajše poti uporabimo Dijkstro. Novi graf ima $O(|V|K/\epsilon)$ vozlišč in $O(|E|K/\epsilon)$ robov. Dijkstra  je  časovno najbolj zahtevna stvar, zato je časovna zahtevnost celotnega algoritma enaka $O(\frac{K}{\epsilon}(|E| + |V|\log\frac{|V|}{\epsilon}) )$. Če je $n$ število vseh oglišč ovir, je to v najboljšem primeru $\Omega(\frac{n^3}{\epsilon})$.
 
+ Tako lahko končno najdemo najkrajšo pot pri našem problemu, prikazano na sliki \ref{fig:errP1}.
+
+ \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.65\textwidth]{errPath1.png}
+    \caption{Najkrajša pot z $\epsilon = 0.5$.}
+    \label{fig:errP1}
+\end{figure}
+
+V svoji implementaciji zaradi preprostosti ne naredim $2/\epsilon$ kopij temveč samo $1/\epsilon$. Posledično bo cena najkrajše poti manjša od $(1 + 2\epsilon)C$. Čeprav je naš primer zelo preprost, se napaka pojavi če izberemo $\epsilon > 0.5$, kot vidimo na sliki \ref{fig:errP05}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.65\textwidth]{errPathEps1.png}
+    \caption{Najkrajša pot z $\epsilon = 1$.}
+    \label{fig:errP05}
+\end{figure}
+
+
+
+
 \subsection*{Hitrejši algoritem}
 
 Za večjo hitrost bomo morali modificirati graf $G$. Pravzaprav hočemo zmanjšati število povezav v grafu, na katerem na koncu poženemo Dijsktro. V zameno pa je tukaj lahko napaka $(1+\epsilon)$ tudi pri dolžini poti. Algoritem ima dva dela. Najprej konstruiramo nov graf $H = (X,\Gamma)$, ki bo imel manj povezav kot $G$. Zanimivo pa je, da ima $H$ več vozlišč kot $G$. K drugem delu pristopimo podobno kot prej, s kopiranjem grafa $H$. Ta algoritem ima časovno zahtevnost $O(\frac{nh}{\epsilon^2}\log n \log \frac{n}{\epsilon})$ kar je približno za potenco $n$ manj kot prejšnji algoritem.
 
 \subsubsection*{Konstrukcija grafa $H$}
 
-Začeli smo z grafom $G = (V,E)$. Za $H = (X,\Gamma)$ bo veljalo $|X|, |\Gamma| = O(n \log n)$ in $V \subseteq X$. Označimo razdaljo med ogliščema $v,u$ v grafu $G$ z $d_G(v,u)$. Potem bo za vsak par $v,u \in G$ veljalo  $d_G(v,u) \leq d_H(v,u) \leq \sqrt{2}d_G(v,u)$
+Začeli smo z grafom $G = (V,E)$. Za $H = (X,\Gamma)$ bo veljalo $|X|, |\Gamma| = O(n \log n)$ in $V \subseteq X$. Označimo razdaljo med ogliščema $v,u$ v grafu $G$ z $d_G(v,u)$. Potem bo za vsak par $v,u \in G$ veljalo  $d_G(v,u) \leq d_H(v,u) \leq \sqrt{2}d_G(v,u)$. Naše poti bodo sestavljene bolj iz vodoravnih in navpičnih segmentov, jih bo pa manj.
 
-\section*{Okviren načrt dela}
+Graf $H$ konstruiramo z naslednjim rekurzivnim algoritmom.
 
+\begin{algorithm}
+    \caption{Dobimo graf $H$ z manj povezavami}
+    \begin{algorithmic}[1]
+        \State Naj bo $x_m$ mediana za $x$-koordinate točk v $V$. 
+        \State  Naj bo $l_v: \ x = x_m$ navpična premica, ki razdeli $V$ na levo polovico $V_l$ in desno $V_d$.
+        \For{ $v \in V$} 
+            \State Dobimo projekcijo $v' = (x_m,v_y)$
+            \If {cena poti $\overline{vv'} \leq C$}
+                \State Dodamo $v'$ v $X$ in $(v,v')$ v $\Gamma$
+            \EndIf
+            \State Naj bo $s'$ prvi rob ovire s pozitivnim naklonom, ki seka $\overline{vv'}$. 
+            \If{$s'$ seka $l_v$} 
+                \State Dodali bomo "obhodna" vozlišča in povezave v $H$.
+                \State Označimo presečišče $\overline{vv'}$ in $s'$ z $v_1$ in presečišče $s'$ in $l_v$ z $v_2$. 
+                \State Dodamo ti dve točki v $X$ ter povezavi $(v,v_1)$ in $(v_1,v_2)$ v $\Gamma$.
+            \EndIf
+            \State Ponovimo postopek za prvi $s'$ z negativnim naklonom.
+            \State Recimo točkam na premici $l_v$ Steinerjeve točke.
+            \For{$w, w'$ sosednji Steinerjevi točki}
+                \State Če je cena $\overline{ww'} \leq C$, dodamo $(w,w')$ v $\Gamma$.
+            \EndFor
+        \EndFor
+        \State Rekurzivno ponovimo na množicah $V_l$ in $V_d$.
+        
+        \State Ponovimo vse zgoraj, le tokrat z mediano $y_m$ za $y$-koordinate  in premico $l_h: \ y_m = y$.
+        \State Dodamo v $\Gamma$ še robove ovir.
+    \end{algorithmic}
+\end{algorithm}
 
 
 \begin{thebibliography}{99}

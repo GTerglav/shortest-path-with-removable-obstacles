@@ -252,15 +252,29 @@ def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
     plt.show()
 
 
-def plotPointsAndObstaclesSweep(start, goal, obstacles, shortestPath=None):
-    """Plot only the points and obstacles"""
+def plotPointsAndObstaclesSweep(
+    start, goal, obstacles, budget, costs, epsilon, shortestPath=None
+):
     plt.figure()
 
     # Plot obstacles
-    for obs in obstacles:
+    for i, obs in enumerate(obstacles):
+        xCoords = [point[0] for point in obs]
+        yCoords = [point[1] for point in obs]
         plt.fill(*zip(*obs), color="gray", alpha=0.5)
         for vertex in obs:
             plt.plot(*vertex, "ko")  # Plot obstacle vertices
+
+        centroid_x = np.mean(xCoords)
+        centroid_y = np.mean(yCoords)
+        plt.text(
+            centroid_x,
+            centroid_y,
+            f"{costs[i]}",
+            color="black",
+            fontsize=13,
+            ha="center",
+        )
 
     # Plot start and goal
     plt.plot(*start, "ro", label="Start")
@@ -271,11 +285,65 @@ def plotPointsAndObstaclesSweep(start, goal, obstacles, shortestPath=None):
         pathArray = np.array(path)
         plt.plot(pathArray[:, 0], pathArray[:, 1], "r-")
 
+    plt.text(
+        0.5,
+        1.05,
+        f"Budget: {budget}, Epsilon: {epsilon}",
+        transform=plt.gca().transAxes,
+        ha="center",
+        fontsize=14,
+    )
+
     # Set aspect ratio and display
     # plt.gca().set_aspect("equal", adjustable="box")
-    plt.legend()
+    # plt.legend()
     plt.xlabel("X")
     plt.ylabel("Y")
-    plt.title("Graph with Obstacles")
-    plt.grid(True)
+    # plt.title("Graph with Obstacles")
+    # plt.grid(True)
+    plt.show()
+
+
+def plotProblem(start, goal, obstacles, budget, costs):
+    plt.figure()
+
+    # Plot obstacles
+    for i, obs in enumerate(obstacles):
+        xCoords = [point[0] for point in obs]
+        yCoords = [point[1] for point in obs]
+        plt.fill(*zip(*obs), color="gray", alpha=0.5)
+        for vertex in obs:
+            plt.plot(*vertex, "ko")  # Plot obstacle vertices
+
+        centroid_x = np.mean(xCoords)
+        centroid_y = np.mean(yCoords)
+        plt.text(
+            centroid_x,
+            centroid_y,
+            f"{costs[i]}",
+            color="black",
+            fontsize=13,
+            ha="center",
+        )
+
+    # Plot start and goal
+    plt.plot(*start, "ro", label="Start")
+    plt.plot(*goal, "bo", label="Goal")
+
+    plt.text(
+        0.5,
+        1.05,
+        f"Budget: {budget}",
+        transform=plt.gca().transAxes,
+        ha="center",
+        fontsize=14,
+    )
+
+    # Set aspect ratio and display
+    # plt.gca().set_aspect("equal", adjustable="box")
+    # plt.legend()
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    # plt.title("Graph with Obstacles")
+    # plt.grid(True)
     plt.show()
