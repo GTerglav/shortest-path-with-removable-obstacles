@@ -15,3 +15,27 @@ env/
 # Ignore other OS generated files
 .DS_Store
 Thumbs.db
+
+# Ignore LaTeX auxiliary and intermediate files
+*.aux
+*.bbl
+*.blg
+*.brf
+*.dvi
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.nav
+*.snm
+*.vrb
+
+# Ignore backup files
+*~
+*.bak
+*.sav
+*.backup
