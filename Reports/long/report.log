@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.11) (preloaded format=pdflatex 2020.11.6)  19 MAY 2024 23:13
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.11) (preloaded format=pdflatex 2020.11.6)  20 MAY 2024 12:19
 entering extended mode
 **d:/Faks_stvari/MATRAČ/shortest-path-with-removable-obstacles/Reports/long/report.tex
 (d:/Faks_stvari/MATRAČ/shortest-path-with-removable-obstacles/Reports/long/report.tex
@@ -167,19 +167,19 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 22.
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) [1
 
-{C:/Users/Gasper/AppData/Local/MiKTeX/pdftex/config/pdftex.map}] [2] [3] (d:/Faks_stvari\MATRAČ\shortest-path-with-removable-obstacles\Reports\long\report.aux) ) 
+{C:/Users/Gasper/AppData/Local/MiKTeX/pdftex/config/pdftex.map}] [2] [3] [4] (d:/Faks_stvari\MATRAČ\shortest-path-with-removable-obstacles\Reports\long\report.aux) ) 
 Here is how much of TeX's memory you used:
  2810 strings out of 479799
  39536 string characters out of 2869248
- 334913 words of memory out of 3000000
+ 333913 words of memory out of 3000000
  19798 multiletter control sequences out of 15000+200000
  543297 words of font info for 61 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 65i,7n,72p,905b,293s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 65i,7n,72p,1092b,293s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr5.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/Gasper/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on d:/Faks_stvari\MATRAČ\shortest-path-with-removable-obstacles\Reports\long\report.pdf (3 pages, 189396 bytes).
+Output written on d:/Faks_stvari\MATRAČ\shortest-path-with-removable-obstacles\Reports\long\report.pdf (4 pages, 194730 bytes).
 PDF statistics:
- 80 PDF objects out of 1000 (max. 8388607)
+ 83 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

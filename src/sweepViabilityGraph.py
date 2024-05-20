@@ -30,9 +30,11 @@ class Graph:
 
 # Returns cost of path from p to w. wMinusOne is vertex before w in angular ordering
 def viable(p, w, wMinusOne, costToWMinusOne, root, obstacles, costs):
-    
+
     # check if p and w are in same obstacle segment
-    sameObstacleResult = helper.inSameObstacleSegment(p, w, obstacles, costs)
+    sameObstacleResult = helper.inSameObstacleSegment(
+        p, w, obstacles, costs
+    )  # Runs O(n) thats why the whole thing is O(n^3)
     if sameObstacleResult is not None:
         obstacle, cost = sameObstacleResult
         if helper.areNeighboursInObstacle(p, w, obstacle):
@@ -44,35 +46,7 @@ def viable(p, w, wMinusOne, costToWMinusOne, root, obstacles, costs):
     elif (wMinusOne is None) or (helper.ccw(p, w, wMinusOne)) != 0:
         if root is None:
             return 0
-
-        totalCost = 0
-        count = 0
-        # want to keep track of costs
-        costDict = {}
-
-        # Traverse the AVL tree to find edges
-        stack = [root]
-        while stack:
-            node = stack.pop()
-            if node is not None:
-                start, end, _, cost = node.key
-                if helper.intersect2(p, w, start, end):
-                    totalCost += cost
-                    count += 1
-                    if cost in costDict:
-                        costDict.pop(cost)
-                    else:
-                        costDict[cost] = True
-                stack.append(node.left)
-                stack.append(node.right)
-
-        # If the cost is counted twice we have to divide by two if its counted once then its full cost
-        if len(costDict) == 0:
-            totalCost /= 2
-        else:
-            singleCost = sum(costDict.keys())
-            totalCost = (totalCost - singleCost) / 2 + singleCost
-        return totalCost
+        return helper.costOfSegment(w, p, root, costs)
 
     # If they are colinear then we know the cost to w_-1 just need the cost from w_-1 to w
     else:
@@ -85,7 +59,7 @@ def viable(p, w, wMinusOne, costToWMinusOne, root, obstacles, costs):
             else:
                 return totalCost + cost
         else:
-            return totalCost + helper.costOfSegment(w, wMinusOne, root)
+            return totalCost + helper.costOfSegment(w, wMinusOne, root, costs)
 
 
 # Returns viable vertices from v and costs of those direct paths
@@ -103,8 +77,9 @@ def viableVerticesFromV(v, points, obstacles, costs, budget):
             end = obstacle[(i + 1) % len(obstacle)]
             t = helper.intersectLine(v, (v[0] + 1, v[1]), start, end)
             if t < math.inf:
-                # So our tree stores the following info about edges: start, end, distance from v and cost of whole obstacle.
-                root = T.insert(root, (start, end, t, costs[j]))
+                # So our tree stores the following info about edges:
+                # start, end, distance from v,cost of whole obstacle and obstalce name
+                root = T.insert(root, (start, end, t, costs[j], j))
 
     W = set()
     wMinusOne = None
@@ -139,6 +114,7 @@ def viableVerticesFromV(v, points, obstacles, costs, budget):
                                 (helper.distance(v, start) + helper.distance(v, end))
                                 / 2,
                                 costs[k],
+                                k,
                             ),
                         )
             # we need to store w_-1
@@ -268,7 +244,7 @@ pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 
 if __name__ == "__main__":
     startTime = time.time()
-    main(pklProblem40)
+    main(problems.problemError3)
     endTime = time.time()
     print(f"Execution time {endTime - startTime} seconds")
 

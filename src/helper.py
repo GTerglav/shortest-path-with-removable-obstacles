@@ -153,26 +153,40 @@ def areNeighboursInObstacle(v, w, obstacle):
     )
 
 
-def costOfSegment(v, w, root):
+def costOfSegment(v, w, root, costs):
     if root is None:
         return 0
 
-    total_cost = 0
+    totalCost = 0
+    count = 0
+    # want to keep track of costs
+    costDict = {}
 
-    # Traverse the AVL tree to find edges intersecting with the segment
+    # Traverse the AVL tree to find edges
     stack = [root]
     while stack:
         node = stack.pop()
         if node is not None:
-            start, end, _, cost = node.key
-            # Check if the edge intersects with the segment vw
+            start, end, _, cost, obstacleName = node.key
             if intersect2(v, w, start, end):
-                total_cost += cost
-            # Traverse left and right subtrees
+                totalCost += cost
+                count += 1
+                if obstacleName in costDict:
+                    costDict.pop(obstacleName)
+                else:
+                    costDict[obstacleName] = True
             stack.append(node.left)
             stack.append(node.right)
 
-    return total_cost
+    # If the cost is counted twice we have to divide by two if its counted once then its full cost
+    if len(costDict) == 0:
+        totalCost /= 2
+    else:
+        singleCosts = 0
+        for obstacleName in costDict.keys():
+            singleCosts += costs[obstacleName]
+        totalCost = (totalCost - singleCosts) / 2 + singleCosts
+    return totalCost
 
 
 def printGraph(graph):

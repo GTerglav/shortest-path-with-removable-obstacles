@@ -101,6 +101,31 @@ problemError = problemParameters(
     epsilon=0.5,
 )
 
+problemError2 = problemParameters(
+    start=[0, 0],
+    goal=[4, 0],
+    obstacles=[
+        [[1, 0], [0, -1], [1.5, -1]],
+        [[2, -1], [1.5, 3], [3, 3]],
+        [[3, 0], [2.1, -1], [3.5, -1]],
+    ],
+    costs=[3.5, 8, 3.5],
+    budget=8,
+    epsilon=0.5,
+)
+
+problemError3 = problemParameters(
+    start=[0, 0],
+    goal=[4, 0],
+    obstacles=[
+        [[1, 0], [2, -1], [2, 1]],
+        [[3, 0], [2.1, -1], [2.1, 1]],
+    ],
+    costs=[3, 3],
+    budget=3,
+    epsilon=0.5,
+)
+
 
 #######Generate problems
 

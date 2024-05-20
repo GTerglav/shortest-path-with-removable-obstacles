@@ -6,6 +6,8 @@ from problems import (
     problem3,
     problem4,
     problemError,
+    problemError2,
+    problemError3,
     problemParameters,
 )
 from sweepViabilityGraph import main
@@ -22,6 +24,8 @@ problems = {
     "problem3": problem3,
     "problem4": problem4,
     "problemError": problemError,
+    "problemBug1": problemError2,
+    "problemBug2": problemError3,
 }
 
 
