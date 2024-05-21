@@ -7,10 +7,11 @@
 \usepackage{babel}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{hyperref}
 
 \graphicspath{{images/}}
 
-\renewcommand\refname{Vir}
+\renewcommand\refname{Viri}
 
 
 \author{Gašper Terglav}
@@ -38,7 +39,7 @@ Preprost primer na katerem so ovire s cenami, začetek in konec, ter proračun l
 \end{figure}
 
 
-Zanima nas torej: ali obstaja pot dolžine $L$ in cene $C$ med začetkom in koncem? Ta problem je na žalost NP-težek, zato se bomo za polinomski čas morali zadovoljiti z algoritmom, ki ima neko napako vsaj v ceni. Še pred algoritmi iz članka pa je treba narediti t.~i.\ "viability graph" za naš problem.
+Zanima nas torej: ali obstaja pot dolžine $L$ in cene $C$ med začetkom in koncem? Ta problem je na žalost NP-težek, zato se bomo za polinomski čas morali zadovoljiti z algoritmom, ki ima neko napako vsaj v ceni. Še pred algoritmi iz članka pa je treba narediti t.~i.\ ''viability graph'' za naš problem.
 
 
 
@@ -52,14 +53,14 @@ Zanima nas torej: ali obstaja pot dolžine $L$ in cene $C$ med začetkom in konc
 
 Začnimo s pomembnima opazkama o obnašanju najkrajše poti. Če bo šla naša pot skozi oviro, bo zaradi konveksnosti sekala samo dve stranici večkotnika. Smer bo pot spremenila samo v ogliščih večkotnikov. Tako bomo lahko problem prevedli na iskanje najkrajše poti v grafu, katerega vozlišča so vsa oglišča ovir ter točki $s$ in $t$. Označimo ta graf z $G = (V, E)$, kjer $(u,v) \in E$, če je vsota cen vseh ovir, ki jih prečka daljica $\overline{uv}$ manjša ali enaka od našega proračuna $C$. Vsaka povezava v grafu ima dva parametra, dolžino in ceno. 
 
-Najprej sem se konstrukcije lotil naivno. Za vsak par točk sem za vsako oviro pogledal, če jo pot seka. Ta pristop ima časovno zahtevnost $O(n^3)$. Je pa tudi veliko robnih primerov, ki otežijo implementacijo. Trenutna implementacija ima problem, ko je na poti med ogliščema še tretje oglišče. Če sta drugo in tretje oglišče del iste ovire in gre pot po njeni notranjosti, tega nisem znal na lep način zaznati. Tako bi imela ta povezava premajhno ceno. Implementacija je v datoteki "viabilityGraph.py"
+Najprej sem se konstrukcije lotil naivno. Za vsak par točk sem za vsako oviro pogledal, če jo pot seka. Ta pristop ima časovno zahtevnost $O(n^3)$. Je pa tudi veliko robnih primerov, ki otežijo implementacijo. Trenutna implementacija ima problem, ko je na poti med ogliščema še tretje oglišče. Če sta drugo in tretje oglišče del iste ovire in gre pot po njeni notranjosti, tega nisem znal na lep način zaznati. Tako bi imela ta povezava premajhno ceno. Implementacija je v datoteki ''viabilityGraph.py''
 
 Viabilty graph je v resnici posplošitev konstrukcije z imenom angleškim imenom visibility graph, s katerim se rešuje osnovno verzijo problema, kjer je $C = 0$. O tej verziji je več literature, s katero sem si lahko pomagal. Zato sem izgradnjo visibility grapha iz knjige~\cite{BCKO} v poglavju $15$ posplošil na viability graph. 
-Na vsakem koraku pri konstrukciji izberemo novo oglišče $v$. Ugotoviti moramo, do katerih oglišč lahko iz $v$ pridemo s ceno največ $C$. Pri naivnem pristopu smo oglišča pregledali kakor so padla. Sedaj pa jih hočemo v nekem pametnem vrstnem redu, da bomo lahko nekaj informacij uporabili za naprej. Predstavljajmo si poltrak $p$, ki ima izhodišče v $v$ in naredi en krog v smeri urinega kazalca. Oglišča bomo pregledali v vrstnem redu, ki ga določa ta sprehod poltraka (ang.\ plane sweep). Če $p$ oglišča seka istočasno, imajo prednost tista, ki so bližje $v$.
-Robove ovir, ki jih $p$ seka, bomo shranili v dvojiško drevo, kar omogoča hitrejše dodajanje in brisanje.
+Na vsakem koraku pri konstrukciji izberemo novo oglišče $v$. Ugotoviti moramo, do katerih oglišč lahko iz $v$ pridemo s ceno največ $C$. Pri naivnem pristopu smo oglišča pregledali kakor so padla. Sedaj pa jih hočemo v nekem pametnem vrstnem redu, da bomo lahko nekaj informacij uporabili za naprej. Predstavljajmo si poltrak $p$, ki ima izhodišče v $v$ in naredi en krog v smeri urinega kazalca. Oglišča bomo pregledali v vrstnem redu, ki ga določa ta sprehod poltraka (ang.\ plane sweep). Če $p$ oglišča seka istočasno, imajo prednost tista, ki so bližje $v$. Robove ovir, ki jih $p$ seka, bomo shranili v dvojiško drevo, kar omogoča hitrejše dodajanje in brisanje. Psevdokoda je v Algorithm \ref{alg:visibleFromV}.
 
 \begin{algorithm}
     \caption{Vrnem seznam oglišč, ki jih lahko dosežemo iz $v$}
+    \label{alg:visibleFromV}
     \begin{algorithmic}[1]
         \State Uredimo preostala oglišča glede na kot, ki ga daljica med ogliščem in $v$ naredi s pozitivno x-osjo.
         \State  Dodamo v drevo vse robove, ki jih $p$ seka. Prvi rob je tisti, ki ga poltrak najprej seka.
@@ -87,36 +88,7 @@ Ta funkcija z imenom \emph{viable} nato za vsak $w_i$ pregleda dvojiško drevo i
     \label{fig:errG1}
 \end{figure}
 
-% \begin{algorithm}
-%     \caption{Vrnem ceno poti med $v$ in $w_i$}
-%     \begin{algorithmic}[1]
-%         \If{$v$ in $w_i$ del iste ovire}
-%             \If{sta soseda}
-%                 \State \Return 0
-%             \Else
-%                 \State \Return \texttt{cena ovire}
-%             \EndIf
-%         \ElsIf{$v$, $w_i$, $w_{i-1}$ niso kolinearne}
-%             \State  Pregledamo drevo z robovi ovir in seštejemo cene ovir, ki jih seka $\overline{vw_i}$
-%             \State \Return \texttt{cena poti}
-%         \Else
-%             \State \texttt{cena = cena poti do $w_{i-1}$} 
-%             \If{$w_i$ in $w_{i-1}$ v isti oviri}
-%                 \If{$w_i$ in $w_{i-1}$ soseda v isti oviri} 
-%                     \State \Return \texttt{cena}
-%                 \Else
-%                     \State \Return \texttt{cena + cena ovire}
-%                 \EndIf
-%             \Else
-%             \State  Pregledamo drevo z robovi ovir in seštejemo cene ovir, ki jih seka $w_iw$
-%             \State \Return \texttt{cena + cena poti $w_iw$}
-%             \EndIf
-%         \EndIf
-%     \end{algorithmic}
-% \end{algorithm}
  
-
-
 \subsection*{Algoritem v polinomskem času z napako $(1+\epsilon)$ v ceni}
 
 Ker imamo viability graph $G = (V,E)$, lahko končno začenmo z vsebino članka. Glavni problem je, da imajo povezave v $G$ dva parametra: ceno in dolžino.
@@ -148,16 +120,15 @@ V svoji implementaciji zaradi preprostosti ne naredim $2/\epsilon$ kopij temveč
 
 \subsection*{Hitrejši algoritem}
 
-Za večjo hitrost bomo morali modificirati graf $G$. Pravzaprav hočemo zmanjšati število povezav v grafu, na katerem na koncu poženemo Dijsktro. V zameno pa je tukaj lahko napaka $(1+\epsilon)$ tudi pri dolžini poti. Algoritem ima dva dela. Najprej konstruiramo nov graf $H = (X,\Gamma)$, ki bo imel manj povezav kot $G$. Zanimivo pa je, da ima $H$ več vozlišč kot $G$. K drugem delu pristopimo podobno kot prej, s kopiranjem grafa $H$. Ta algoritem ima časovno zahtevnost $O(\frac{nh}{\epsilon^2}\log n \log \frac{n}{\epsilon})$ kar je približno za potenco $n$ manj kot prejšnji algoritem.
+Za večjo hitrost bomo morali modificirati graf $G$. Pravzaprav hočemo zmanjšati število povezav v grafu, na katerem na koncu poženemo Dijsktro. V zameno pa je tukaj lahko napaka $(1+\epsilon)$ tudi pri dolžini poti. Algoritem ima dva dela. Najprej konstruiramo nov graf $H = (X,\Gamma)$, ki bo imel manj povezav kot $G$. Ta algoritem ima časovno zahtevnost $O(\frac{nh}{\epsilon^2}\log n \log \frac{n}{\epsilon})$ kar je približno za potenco $n$ manj kot prejšnji algoritem.
 
 \subsubsection*{Konstrukcija grafa $H$}
 
-Začeli smo z grafom $G = (V,E)$. Za $H = (X,\Gamma)$ bo veljalo $|X|, |\Gamma| = O(n \log n)$ in $V \subseteq X$. Označimo razdaljo med ogliščema $v,u$ v grafu $G$ z $d_G(v,u)$. Potem bo za vsak par $v,u \in G$ veljalo  $d_G(v,u) \leq d_H(v,u) \leq \sqrt{2}d_G(v,u)$. Naše poti bodo sestavljene bolj iz vodoravnih in navpičnih segmentov, jih bo pa manj.
-
-Graf $H$ konstruiramo z naslednjim rekurzivnim algoritmom.
+Začeli smo z grafom $G = (V,E)$. Za $H = (X,\Gamma)$ bo veljalo $|X|, |\Gamma| = O(n \log n)$ in $V \subseteq X$. Označimo razdaljo med ogliščema $v,u$ v grafu $G$ z $d_G(v,u)$. Potem bo za vsak par $v,u \in G$ veljalo  $d_G(v,u) \leq d_H(v,u) \leq \sqrt{2}d_G(v,u)$. Da bomo lahko zmanjšali število povezav, bomo morali, kakor se sliši čudno, povečati število vozlišč. Potegnili bomo navpično premico, ki naša oglišča razdeli na dva približno enaka dela in nato dodali v graf projekcije vozlišč na premico. To bomo rekurzivno ponovili na obeh polovicah itd.\, potem pa vse še enkrat z vodoravnimi premicami. Potem bomo dodali povezave, večina jih bo oblike (vozlišče, njegova projekcija). Tako bodo poti v grafu sestavljene bolj iz vodoravnih in navpičnih segmentov. Celoten postopek je opisan v Algorithm \ref{alg:sparseGraph}.
 
 \begin{algorithm}
     \caption{Dobimo graf $H$ z manj povezavami}
+    \label{alg:sparseGraph}
     \begin{algorithmic}[1]
         \State Naj bo $x_m$ mediana za $x$-koordinate točk v $V$. 
         \State  Naj bo $l_v: \ x = x_m$ navpična premica, ki razdeli $V$ na levo polovico $V_l$ in desno $V_d$.
@@ -168,7 +139,7 @@ Graf $H$ konstruiramo z naslednjim rekurzivnim algoritmom.
             \EndIf
             \State Naj bo $s'$ prvi rob ovire s pozitivnim naklonom, ki seka $\overline{vv'}$. 
             \If{$s'$ seka $l_v$} 
-                \State Dodali bomo "obhodna" vozlišča in povezave v $H$.
+                \State Dodali bomo ''obhodna'' vozlišča in povezave v $H$.
                 \State Označimo presečišče $\overline{vv'}$ in $s'$ z $v_1$ in presečišče $s'$ in $l_v$ z $v_2$. 
                 \State Dodamo ti dve točki v $X$ ter povezavi $(v,v_1)$ in $(v_1,v_2)$ v $\Gamma$.
             \EndIf
@@ -185,12 +156,59 @@ Graf $H$ konstruiramo z naslednjim rekurzivnim algoritmom.
     \end{algorithmic}
 \end{algorithm}
 
+Da izvedemo celoten algoritem potrebujemo dve stvari. Za vsak par $vv'$ moramo poiskati prvi rob z pozitivnim in prvi rob negativnim naklonom, ki seka $\overline{vv'}$. Za vsako povezavo, ki jo dodamo v graf, moramo izračunati njeno ceno. Za razliko od grafa $G$, bodo tukaj vse povezave, ki niso na povrišini ovir, vodoravne ali navpične. Zato sem si pomagal s člankom \cite{SnT} ter implementiral verzijo binarnih dreves (ang.\ persistent binary search tree), ki omogoča rešitev naslednjega problema: za vertikalno daljico najde vse večkotnike, ki jih daljica seka. Angleški izraz bom prevedel na časovna drevesa.
+
+Osnovni namen teh dreves je rešiti problem iskanja lokacije točke v ravnini (ang.\ planar point location). Če imamo delitev ravnino na večkotnike nas potem za neko točko zanima, kateri večkotnik jo vsebuje. Problema se v članku lotijo tako, da potegnejo navpično premico čez vsako oglišče večkotnika. Tako razdelimo ravnino na trakove. Za lokacijo točke potem potrebujemo le dve binarni iskanji: najprej poiščemo trak, ki točko vsebuje, nato pa v traku najdemo še najbližji rob večkotnika pod točko. Lahko bi za vsak trak naredili eno dvojiško drevo, vendar to porabi več prostora kot naša rešitev. Namesto veliko dreves bi lahko imeli eno drevo, ki se spreminja skozi čas in omogča, da dostopamo do starejših verzij. Ravno to omogočajo časovna drevesa. Želene lastnosti dosežemo s kopiranjem poti (ang. path copying). Če imamo drevo ob času 0 in dodamo nov element ob času 1, potem naredimo kopije vseh vozlišč, ki so na poti od korena do novega vozlišča in označimo čas njihovega nastanka. Če torej želimo pogledati verzijo drevesa v času $t$, samo začemo v korenu, ki je nastal ob času $t$ in normalno hodimo po drevesu. Ampak to spet porabi veliko prostora, saj kopiramo veliko vozlišč. Glavna ideja članka je, da dopustimo vozliščem $2 + k$ otrok in jih kopiramo le, ko presežejo to mejo. Po drevesu se v času $t$ sprehajamo tako, da obiščemo najstarejšega otroka, čigar čas nastanka je manjši ali enak $t$, v dani smeri. Implementacija s $k = 1$ se nahaja v datoteki persistentRBTree.py. Rdeče-črna drevesa sem izbral zato, da sem lažje sledil članku. 
+
+Do tukaj sem naredil to kar je v članku. Sedaj moram še ugotoviti kako uporabiti drevesa za dosego ciljev in dokončati algoritem, da bom lahko na koncu pokazal neko primerjavo. Opisal bom še kako deluje kopiranje grafa $H$ za nek parameter $\epsilon$.
+
+Naj bo $N$ množica enotskih vektorjev velikosti $1/ \epsilon$, tako da je med sosednjima vektorjema kot enak $\epsilon$. Za vsak vektor $u \in N$ naredimo graf $H^u$, ki je samo zgoraj opisan graf $H$, le da zavrtimo ravnino tako, da je $u$ vzporeden y-osi. Potem je $H_\epsilon = \cup_{n \in \mathbb{N}} H^u$. Potem na grafu $H_\epsilon$ uporabimo prvotni algoritem, torej $1/\epsilon$ kopij in nato Dijsktra za najkrajšo pot. Časovna zahtevnost novega celotnega algoritma je $O(\frac{nh}{\epsilon^2} \log n \log \frac{n}{\epsilon})$, kjer je h število ovir.
+
+
+\section{Reševanje problemov}
+
+Izdelal sem preprost spletni vmesnik (slika \ref{fig:web}), v katerem lahko izbiramo med posameznimi problemi in vidimo najkrajšo pot. Pri primeru problemError lahko vidimo prekoračenje proračuna če $\epsilon > 0.5$ in budget $6$, zadnja dva mi pa do včeraj nista delala pravilno. Lahko modificiramo vrednost $\epsilon$ in proračuna. Vidimo tudi čas, ki ga celoten algoritem porabi. Algoritem za izračun viability grapha je tisti, ki uporabi ''circular sweep''. Treba pognati datoteko main.py, pred tem pa naložiti flask in plotly.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1\textwidth]{web.png}
+    \caption{Spletni vmesnik}
+    \label{fig:web}
+\end{figure}
+
+Da bi lahko kasneje primerjal algoritme sem nekaj problemov tudi generiral. Sedaj lahko primerjam samo različna algoritma za konstrukcijo viability grapha, ter kako se potem počasnejši algoritem za iskanje poti obnaša ko manjšam $\epsilon$.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        & \multicolumn{4}{c|}{n (število oglišč)} \\
+        \cline{2-5}
+        & 40 & 180 & 360 & 864 \\
+        \hline
+        Naivni algoritem & 0.5s & 36s &  301s &  \\
+        \hline
+        Sweep algoritem & 1s & 60s & 480s  & 6666s  (2h) \\
+        \hline
+    \end{tabular}
+    \caption{Primerjava algoritmov za viability graph}
+    \label{tab:simple_table}
+\end{table}
+
+Upamo, da bo do predstavitve sweep algoritem že hitrejši.
+
+
 
 \begin{thebibliography}{99}
 
-    \bibitem{PNS} P.~K.~Agarwal, N.~Kumar, S.~Sintos in S.~Suri. \emph{Computing Shortest Paths in the Plane with Removable Obstacles}. In 16th Scandinavian Symposium and Workshops on Algorithm Theory (SWAT 2018). Leibniz International Proceedings in Informatics (LIPIcs), Volume 101, pp. 5:1-5:15, Schloss Dagstuhl – Leibniz-Zentrum für Informatik (2018)
+    \bibitem{PNS} P.~K.~Agarwal, N.~Kumar, S.~Sintos in S.~Suri. \emph{Computing Shortest Paths in the Plane with Removable Obstacles}. 16. Scand. Symp. Work. Alg. Th. \textbf{101}, (2018);
+    dostopno tudi na \url{https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.SWAT.2018.5}
+
 
     \bibitem{BCKO} M.~Berg, O.~Cheong, M.~Kreveld in  M.~Overmars \emph{Computational Geometry: Algorithms and Applications} Springer Berlin, Heidelberg, 2010
 
+    \bibitem{SnT} N.~Sarnak in R.~E.~Tarjan \emph{Planar point location using persistent search trees}, Commun. ACM \textbf{29} (1986) 669-679; dostopno tudi na \url{https://dl.acm.org/doi/pdf/10.1145/6138.6151}
+
 \end{thebibliography}
 \end{document}
+

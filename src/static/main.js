@@ -2,6 +2,7 @@
 const problemSelect = document.getElementById('problemSelect');
 const epsilonRange = document.getElementById('epsilonRange');
 const epsilonValue = document.getElementById('epsilonValue');
+const budgetInput = document.getElementById('budget');
 const calculateButton = document.getElementById('calculateButton');
 const resultDiv = document.getElementById('result');
 
@@ -27,6 +28,7 @@ calculateButton.addEventListener('click', () => {
     // Retrieve the selected problem and epsilon value
     const problem = problemSelect.value;
     const epsilon = epsilonRange.value;
+    const budget = budgetInput.value;
 
     // Make a POST request to the server to calculate the shortest path and get the Plotly figure data
     fetch('/calculate_shortest_path', {
@@ -34,7 +36,7 @@ calculateButton.addEventListener('click', () => {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ problem, epsilon })
+        body: JSON.stringify({ problem, epsilon, budget })
     })
     .then(response => response.json())
     .then(data => {

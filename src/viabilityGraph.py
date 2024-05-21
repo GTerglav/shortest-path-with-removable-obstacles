@@ -131,14 +131,16 @@ def main(problem, epsilon=None):
 
 
 pklProblem40 = problems.loadProblemPickle("problem40.pkl")
+# n = 40, time = 0.489s Viabilty graph and 0.0049s rest
 pklProblem200 = problems.loadProblemPickle("problem200.pkl")
-# n = 180, time = 36s
+# n = 180, time = 36s Via and 0.08s res
 pklProblem400 = problems.loadProblemPickle("problem400.pkl")
-# n = 360, time = 306s ->
+# n = 360, time = 301s Via and 0.31s res
 pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
+# n = 864,
 if __name__ == "__main__":
     startTime2 = time.time()
-    main(pklProblem40)
+    main(pklProblem400)
     endTime2 = time.time()
     print(f"Execution time {endTime2 - startTime2} seconds")
 

@@ -142,11 +142,28 @@ def get_problems():
 
 @app.route("/calculate_shortest_path", methods=["POST"])
 def calculate_shortest_path():
-    problem_name = request.json["problem"]
-    epsilon = float(request.json["epsilon"])
+    data = request.json
+
+    problem_name = data.get("problem")
+    if problem_name not in problems:
+        return jsonify({"error": "Invalid problem name"}), 400
+
+    # Try to convert epsilon to float, use default if it fails
+    try:
+        epsilon = float(data.get("epsilon"))
+    except (ValueError, TypeError):
+        epsilon = 1.0
+
+    # Try to convert budget to float, use default if it fails
+    try:
+        budget = float(data.get("budget"))
+    except (ValueError, TypeError):
+        budget = None
 
     # Retrieve the problem object based on the selected problem name
     problem = problems.get(problem_name)
+    if budget:
+        problem.budget = budget
 
     if problem:
         # Calculate the shortest path for the selected problem

@@ -10,11 +10,26 @@
 <body>
     <div class="container">
         <h1>Shortest path with removable obstacles</h1>
-        <div class="form-container">
+        <!-- <div class="form-container">
             <select id="problemSelect">
                 <option value="">Select a problem</option>
             </select>
             <input type="text" id="epsilonRange" placeholder="Epsilon value" value="1">
+            <input type="text" id="epsilonRange" placeholder="Budget" value="10">
+            <button id="calculateButton">Calculate Shortest Path</button>
+        </div> -->
+        <div class="form-container">
+            <select id="problemSelect">
+                <option value="">Select a problem</option>
+            </select>
+            <div class="input-container">
+                <label for="epsilonRange">Epsilon:</label>
+                <input type="text" id="epsilonRange" placeholder="Epsilon value" value="1">
+            </div>
+            <div class="input-container">
+                <label for="budget">Budget:</label>
+                <input type="text" id="budget" placeholder="Budget" value="10">
+            </div>
             <button id="calculateButton">Calculate Shortest Path</button>
         </div>
         <div id="result"></div>

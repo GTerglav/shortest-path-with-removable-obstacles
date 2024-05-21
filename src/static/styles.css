@@ -25,37 +25,62 @@ h1 {
 /* Form container styles */
 .form-container {
     display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
 }
 
 /* Select styles */
 #problemSelect {
-    flex: 1; /* Take remaining space */
-    margin-right: 10px; /* Add some space between elements */
     padding: 10px;
+    flex: 1;
 }
 
-/* Range input styles */
-#epsilonRange {
-    flex: 1; /* Take remaining space */
-    margin-right: 10px; /* Add some space between elements */
+/* Input container styles */
+.input-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    flex: 1;
+    padding: 5px;
+}
+
+/* Input label styles */
+.input-container label {
     padding: 10px;
+    font-weight: bold;
+}
+
+/* Input styles */
+.input-container input {
+    padding: 10px;
+    width: 100%;
 }
 
 /* Button styles */
 #calculateButton {
-    padding: 10px;
+    padding: 10px 20px;
     background-color: #007bff;
     color: #fff;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
+#calculateButton:hover {
+    background-color: #0056b3;
+}
+
+/* Result and plot styles */
 #result {
-    margin: 20px;
+    margin: 20px 0;
+    text-align: center;
+    font-size: 1.2em;
 }
 
 #plotlyDiv {
-    margin: 20px;
+    margin: 20px 0;
 }
