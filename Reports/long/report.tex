@@ -31,7 +31,7 @@ Problem je posplošitev klasične verzije, v kateri se oviram lahko samo izogiba
 
 Preprost primer, na katerem so ovire s cenami, začetek, konec ter proračun, je prikazan na sliki \ref{fig:errPr1}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.65\textwidth]{err1.png}
     \caption{Primer problema.}
@@ -81,7 +81,7 @@ Ta algoritem poženemo za vsako oglišče, ki ga imamo in tako lahko sestavimo n
 
 Ta funkcija z imenom \emph{viable} nato za vsak $w_i$ pregleda dvojiško drevo in sešteje cene vseh ovir, ki jih $vw$ seka. Že to je počasneje kot v verziji problema, ko je $C = 0$. Tam nas večino časa zanima samo rob z najmanjšim ključem v drevesu, saj je ta najbližje $v$. Če obstaja in seka $\overline{vw_i}$ potem $w_i$ seveda ni viden. Celotno drevo pregledujemo tam samo, če sta $w_i$ in $w_{i-1}$ kolinearna in je $w_{i-1}$ viden. In tudi v tem primeru iščemo samo do prvega presečišča. Drugi problem je, da moramo vsakič na začetku preveriti, ali sta $v$ in $w_i$ del iste ovire. V trenutni implementaciji se tega lotim naivno, kar ima zahetvnost $O(n)$. Zaradi tega je zahtevnost celotnega algoritma skupaj spet $O(n^3)$, kljub temu da je zahtevnost tistega v \cite{BCKO} le $O(n^2 \log n)$. Prvi korak v izboljšavi algoritma je torej nov algoritem, ki preveri če sta dve oglišči del iste ovire. Implementacija se nahaja v datoteki \emph{sweepViabilityGraph.py}. Rezultat algoritma, uporabljenega na našem problemu vidimo na sliki \ref{fig:errG1}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.65\textwidth]{errGraph1.png}
     \caption{Viability graph.}
@@ -99,7 +99,7 @@ Naj bo  zaradi preprostosti $K = min(\frac{C}{min_i \ c_i}, h)$, kjer je $h$ št
 
  Tako lahko končno najdemo najkrajšo pot pri našem problemu, prikazano na sliki \ref{fig:errP1}.
 
- \begin{figure}[h]
+ \begin{figure}[ht]
     \centering
     \includegraphics[width=0.65\textwidth]{errPath1.png}
     \caption{Najkrajša pot z $\epsilon = 0.5$.}
@@ -187,7 +187,7 @@ Da bi lahko kasneje primerjal algoritme sem nekaj problemov tudi generiral. Seda
         \cline{2-5}
         & 40 & 180 & 360 & 860 \\
         \hline
-        Naivni algoritem & 0.5s & 36s &  301s &  1ura 47min\\
+        Naivni algoritem & 0.5s & 36s &  301s &  1ura 16min\\
         \hline
         Sweep algoritem & 1s & 60s & 480s  & 1ura 51min \\
         \hline
@@ -196,7 +196,7 @@ Da bi lahko kasneje primerjal algoritme sem nekaj problemov tudi generiral. Seda
     \label{tab:1}
 \end{table}
 
-Oba algoritma bi morala imeti zahtevnost $O(n^3)$ in sweep se lepo ujema, naivni pa za velike $n$ hitreje upočasnjuje. Če bi bil $O(n^3)$ bi pričakoval za $n = 860$ pričakoval $(860/360)^3 \cdot 301s = 3900s = 65min$. Izgleda, da ima naivni algoritem zahtevnost $O(n^3 \log n)$, zato bi tudi tukaj bilo potrebno preverti implementacijo in razmisliti o izboljšavah. Upamo, da bosta do predstavitve algoritma hitrejša. Še primerjava za različne vrednosti $\epsilon$ pri $n=40$:
+Od obeh algoritmov smo pričakovali zahtevnost $O(n^3)$ in rezultati se kar ujemajo. Upamo pa, da boa do predstavitve sweep algoritem hitrejši. Še primerjava za različne vrednosti $\epsilon$ pri $n=40$:
 
 \begin{table}[h]
     \centering
