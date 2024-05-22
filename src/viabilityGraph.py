@@ -124,7 +124,7 @@ def main(problem, epsilon=None):
         nicePath = convertPathToCoordinates(
             shortestPath, obstacles, start, goal, budget, epsilon
         )
-        plotPointsAndObstacles(start, goal, obstacles, nicePath)
+        # plotPointsAndObstacles(start, goal, obstacles, nicePath)
         print(f"Shortest path from {start} to {goal} is {nicePath}")
 
     # plotViabilityGraph(start, goal, obstacles, graph, nicePath)
@@ -140,14 +140,14 @@ pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 # n = 864,
 if __name__ == "__main__":
     startTime2 = time.time()
-    main(pklProblem400)
+    main(pklProblem1000)
     endTime2 = time.time()
     print(f"Execution time {endTime2 - startTime2} seconds")
 
-    ######## Code for measuring time for different epsilons #########
+    ####### Code for measuring time for different epsilons #########
     # epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
     # for epsilon in epsilons:
     #     start_time = time.time()
-    #     main(problems.problem2, epsilon)  # Use the problem you defined
+    #     main(pklProblem40, epsilon)  # Use the problem you defined
     #     end_time = time.time()
     #     print(f"Epsilon {epsilon}: Execution time {end_time - start_time} seconds")

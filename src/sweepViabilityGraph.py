@@ -20,9 +20,9 @@ class Graph:
         self.vertices[tuple(index)] = []
 
     def addEdge(self, start, end, cost, length):
-        start_tuple = tuple(start)
-        end_tuple = tuple(end)
-        self.vertices.setdefault(start_tuple, []).append((end_tuple, cost, length))
+        startTuple = tuple(start)
+        endTuple = tuple(end)
+        self.vertices.setdefault(startTuple, []).append((endTuple, cost, length))
 
 
 ############################### Viability algorithm #############################################
@@ -268,15 +268,15 @@ pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 ## conclusion n^3 checks out
 
 if __name__ == "__main__":
-    startTime = time.time()
-    main(problems.problemError, 1)
-    endTime = time.time()
-    print(f"Execution time {endTime - startTime} seconds")
+    # startTime = time.time()
+    # main(problems.problemError, 1)
+    # endTime = time.time()
+    # print(f"Execution time {endTime - startTime} seconds")
 
-    ######## Code for measuring time for different epsilons #########
-    # epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
-    # for epsilon in epsilons:
-    #     startTime = time.time()
-    #     main(problems.problem4, epsilon)
-    #     endTime = time.time()
-    #     print(f"Epsilon {epsilon}: Execution time {endTime - startTime} seconds")
+    ####### Code for measuring time for different epsilons #########
+    epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
+    for epsilon in epsilons:
+        startTime = time.time()
+        main(problems.problem4, epsilon)
+        endTime = time.time()
+        print(f"Epsilon {epsilon}: Execution time {endTime - startTime} seconds")
