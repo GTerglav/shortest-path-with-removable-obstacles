@@ -347,3 +347,14 @@ def plotProblem(start, goal, obstacles, budget, costs):
     # plt.title("Graph with Obstacles")
     # plt.grid(True)
     plt.show()
+
+
+# Returns the two neighbors of point in obstacle
+def findObstacleEdges(obstacles, point):
+    for obstacle in obstacles:
+        if point in obstacle:
+            index = obstacle.index(point)
+            prev_index = (index - 1) % len(obstacle)
+            next_index = (index + 1) % len(obstacle)
+            return [obstacle[prev_index], obstacle[next_index]]
+    return None

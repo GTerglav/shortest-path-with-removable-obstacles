@@ -24,7 +24,7 @@ class Node:
 
 class persistentRBTree:
     def __init__(self):
-        self.roots = {0: None}  # root node can be copied so we have a dict of roots
+        self.roots = {-inf: None}  # root node can be copied so we have a dict of roots
 
     # Returns oldes root of current tree that was created before time
     def getCurrentRoot(self, time):
@@ -67,7 +67,7 @@ class persistentRBTree:
             if (pointer[2] is None) and (pointer[1] == direction) and pointer[0] <= time
         ]  # all children in chosen direction that ARE None
 
-        noneTime = 0
+        noneTime = -inf
         if len(noneChildren) > 0:
             noneChildren.sort(key=lambda x: x[0], reverse=True)
             noneTime = noneChildren[0][0]  # latest pointer to none

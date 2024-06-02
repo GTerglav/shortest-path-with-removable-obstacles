@@ -12,7 +12,7 @@ import helper
 from problems import problemParameters
 import problems
 
-import persistentRBTree
+from persistentRBTree import persistentRBTree
 
 ########### First copy all the code from sweepVisGraph to obtain the viability graph we want to sparsify
 
@@ -157,7 +157,45 @@ def viabilityGraph(start, goal, obstacles, costs, budget):
 
 
 def makePersistentTree(obstacles, costs):
-    return
+    tree = persistentRBTree()
+
+    # Just a list of all points
+    points = []
+    for i, obstacle in enumerate(obstacles):
+        for vertex in obstacle:
+            points.append([vertex, costs[i]])
+
+    # Sort them by y, first has lowst
+    sortedPoints = sorted(points, key=lambda point: point[0][1])
+
+    for point in sortedPoints:
+        # two neighbors in obstacle
+        neighbors = helper.findObstacleEdges(obstacles, point[0])
+
+        if neighbors:
+
+            for nh in neighbors:
+                # not considering "= case" since the obstacle segments in such cases are not positive or negative
+                # insert
+                if nh[1] > point[0][1]:
+                    key = point[0][0]  # Dont know what key should be!!!
+                    if nh[0] > point[0][0]:
+                        key += 0.000001
+                        # val is 1st vertex of edge, 2nd, cost of obstacle of edge
+                        tree.insert(key, [point[0], nh, point[1]], point[0][1])
+                    elif nh[0] < point[0][0]:
+                        key -= 0.000001
+                        tree.insert(key, [point[0], nh, point[1]], point[0][1])
+                # delete
+                elif nh[1] < point[0][1]:
+                    key = nh[0]
+                    if nh[0] < point[0][0]:
+                        key += 0.000001
+                        tree.delete(key, point[0][1])
+                    elif nh[0] > point[0][0]:
+                        key -= 0.000001
+                        tree.delete(key, point[0][1])
+    return tree
 
 
 # TODO
@@ -299,3 +337,13 @@ def sparsify(graph, start, goal, obstacles, costs, budget):
 
     # 3. Add edges between consecutive edges on boundaries
     return graph
+
+
+obstacles = [
+    [[1, 0], [2, -1], [2, 1]],
+    [[3, 0], [2.1, -1], [2.1, 1]],
+]
+costs = [3, 3]
+
+tree = makePersistentTree(obstacles, costs)
+tree.printTree(-1)
