@@ -23,8 +23,10 @@ class Node:
 
 
 class persistentRBTree:
-    def __init__(self):
+    def __init__(self, relation, equality):
         self.roots = {-inf: None}  # root node can be copied so we have a dict of roots
+        self.relation = relation  # Instead of  <
+        self.equality = equality  # Instead of ==
 
     # Returns oldes root of current tree that was created before time
     def getCurrentRoot(self, time):
@@ -100,20 +102,23 @@ class persistentRBTree:
         if node.timeCreated <= time < node.timeDeleted:
 
             # found
-            if node.key == key:
+            # if node.key == key:
+            if self.equality(node.key, key):
                 return node
 
-            # go left
-            if node.key > key:
-                return self.access(
-                    self.getLatestChild(node, time, "left"), key, time, lastRight
-                )
-
             # go right
-            if node.key < key:
+            # if node.key < key:
+            elif self.relation(node.key, key):
                 return self.access(
                     self.getLatestChild(node, time, "right"), key, time, node
                 )  # Update lastRight to this node
+
+            # go left
+            # if node.key > key:
+            else:
+                return self.access(
+                    self.getLatestChild(node, time, "left"), key, time, lastRight
+                )
 
         else:
             print("error: wrong time")
@@ -129,20 +134,23 @@ class persistentRBTree:
         if node.timeCreated <= time < node.timeDeleted:
 
             # found
-            if node.key == key:
+            # if node.key == key:
+            if self.equality(node.key, key):
                 return node
 
-            # go left
-            if node.key > key:
-                return self.leftAccess(
-                    self.getLatestChild(node, time, "left"), key, time, node
-                )  # Update lastLeft to this node
-
             # go right
-            if node.key < key:
+            # if node.key < key:
+            elif self.relation(node.key, key):
                 return self.leftAccess(
                     self.getLatestChild(node, time, "right"), key, time, lastLeft
                 )
+
+            # go left
+            # if node.key > key:
+            else:
+                return self.leftAccess(
+                    self.getLatestChild(node, time, "left"), key, time, node
+                )  # Update lastLeft to this node
 
         else:
             print("error: wrong time")
@@ -180,7 +188,8 @@ class persistentRBTree:
             )
 
         def inorderHelperLR(node):
-            if node is None or node.key > upperBound:
+            # if node is None or node.key > upperBound:
+            if node is None or self.relation(upperBound, node.key):
                 return []
             leftChild = self.getLatestChild(node, time, "left")
             rightChild = self.getLatestChild(node, time, "right")
@@ -191,13 +200,22 @@ class persistentRBTree:
             )
 
         def inorderHelperTR(node):
-            if node is None or node.key > upperBound:
+            # if node is None or node.key > upperBound:
+            if node is None or self.relation(upperBound, node.key):
                 return []
 
             parent = self.getCurrentParent(node, time)
             rightChild = self.getLatestChild(node, time, "right")
 
-            if parent and parent.key > node.key and parent.key <= upperBound:
+            # if parent and parent.key > node.key and parent.key <= upperBound:
+            if (
+                parent
+                and self.relation(node.key, parent.key)
+                and (
+                    self.relation(parent.key, upperBound)
+                    or self.equality(parent.key, upperBound)
+                )
+            ):
                 return (
                     inorderHelperTR(parent)
                     + [(node, node.key)]
@@ -218,16 +236,18 @@ class persistentRBTree:
         # First check correct time should always be true though
         if node.timeCreated <= time < node.timeDeleted:
 
-            # go left
-            if node.key > key:
-                return self.findParent(
-                    self.getLatestChild(node, time, "left"), key, time, node
-                )
-
             # go right
-            if node.key < key:
+            # if node.key < key:
+            if self.relation(node.key, key):
                 return self.findParent(
                     self.getLatestChild(node, time, "right"), key, time, node
+                )
+
+            # go left
+            # if node.key > key:
+            else:
+                return self.findParent(
+                    self.getLatestChild(node, time, "left"), key, time, node
                 )
 
         else:
@@ -299,7 +319,8 @@ class persistentRBTree:
                 if parentNode is not None:
 
                     direction = ""
-                    if parentNode.key < copyNode.key:
+                    # if parentNode.key < copyNode.key:
+                    if self.relation(parentNode.key, copyNode.key):
                         direction = "right"
                     else:
                         direction = "left"
@@ -351,7 +372,8 @@ class persistentRBTree:
             return
 
         else:  # Add the pointer from parent to our new node
-            if node.key < parent.key:
+            # if node.key < parent.key:
+            if self.relation(node.key, parent.key):
                 potentialCopies = self.addPointer([time, "left", node], parent, time)
             else:
                 potentialCopies = self.addPointer([time, "right", node], parent, time)
@@ -409,11 +431,12 @@ class persistentRBTree:
 
             # Only have to add pointer from parent to y
             if parent is not None:
-                if parent.key > node.key:
-                    copies2 = self.addPointer([time, "left", y], parent, time)
+                # if parent.key < node.key:
+                if self.relation(parent.key, node.key):
+                    copies2 = self.addPointer([time, "right", y], parent, time)
                     return copies + copies2
                 else:
-                    copies2 = self.addPointer([time, "right", y], parent, time)
+                    copies2 = self.addPointer([time, "left", y], parent, time)
                     return copies + copies2
 
         # means node and y got copied and we have all the pointers we need
@@ -432,11 +455,12 @@ class persistentRBTree:
                 # add pointer from parent to y
                 parent = self.getCurrentParent(y, time)
                 if parent is not None:
-                    if parent.key > node.key:
-                        copies4 = self.addPointer([time, "left", y], parent, time)
+                    # if parent.key < node.key:
+                    if self.relation(parent.key, node.key):
+                        copies4 = self.addPointer([time, "right", y], parent, time)
                         return copies + copies3 + copies4
                     else:
-                        copies4 = self.addPointer([time, "right", y], parent, time)
+                        copies4 = self.addPointer([time, "left", y], parent, time)
                         return copies + copies3 + copies4
 
     # Same as left rotate
@@ -472,7 +496,8 @@ class persistentRBTree:
             y = self.getCurrentParent(node, time)
             parent = self.getCurrentParent(y, time)
             if parent is not None:
-                if parent.key > node.key:
+                # if parent.key > node.key:
+                if self.relation(node.key, parent.key):
                     copies2 = self.addPointer([time, "left", y], parent, time)
                     return copies + copies2
                 else:
@@ -491,7 +516,8 @@ class persistentRBTree:
             else:
                 parent = self.getCurrentParent(y, time)
                 if parent is not None:
-                    if parent.key > node.key:
+                    # if parent.key > node.key:
+                    if self.relation(node.key, parent.key):
                         copies4 = self.addPointer([time, "left", y], parent, time)
                         return copies + copies3 + copies4
                     else:
@@ -745,7 +771,16 @@ class persistentRBTree:
                     self.printSubTree(rightChild, time, indent, True)
 
 
-tree = persistentRBTree()
+# Our custom functions for comparing keys
+def relation(a, b):
+    return a < b
+
+
+def equality(a, b):
+    return a == b
+
+
+tree = persistentRBTree(relation, equality)
 
 # Tests
 
