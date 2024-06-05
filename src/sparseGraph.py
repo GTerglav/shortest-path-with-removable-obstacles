@@ -152,49 +152,120 @@ def viabilityGraph(start, goal, obstacles, costs, budget):
 
 ######################## Now to sparsify the graph ###############
 
+# Define relation and equality for addding obstacle segments to tree
 
-# Make tree from obstacle segments
+
+# a,b line segments of form [point1,point2]
+def equality(a, b):
+    return sorted(a) == sorted(b)
 
 
-def makePersistentTree(obstacles, costs):
-    tree = persistentRBTree()
+# For vertical split lines. "Time" is on y-axis, order on x-axis.
+# returns a<b
+def verticalRelation(a, b):
+    if a[0][1] >= a[1][1]:
+        a = [a[1], a[0]]  # point with lower y-component is first
+    if b[0][1] >= b[1][1]:
+        b = [b[1], b[0]]
 
-    # Just a list of all points
+    low = a if a[0][1] <= b[0][1] else b
+    high = b if a[0][1] <= b[0][1] else a
+
+    if helper.ccw(low[0], low[1], high[0]) > 0:
+        # low > high
+        return b == low
+    elif helper.ccw(low[0], low[1], high[0]) < 0:
+        return b != low
+    else:
+        if helper.ccw(low[0], low[1], high[1]) > 0:
+            # low > high
+            return b == low
+        else:
+            return b != low
+
+
+# For horizontal split lines. "Time" is on x-axis, order on y-axis.
+def horizontalRelation(a, b):
+    if a[0][0] >= a[1][0]:
+        a = [a[1], a[0]]  # point with lower x-component is first
+    if b[0][0] >= b[1][0]:
+        b = [b[1], b[0]]
+
+    low = a if a[0][0] <= b[0][0] else b
+    high = b if a[0][0] <= b[0][0] else a
+
+    if helper.ccw(low[0], low[1], high[0]) > 0:
+        return b == high
+    elif helper.ccw(low[0], low[1], high[0]) < 0:
+        return b != high
+    else:
+        if helper.ccw(low[0], low[1], high[1]) > 0:
+            return b == high
+        else:
+            return b != high
+
+
+a = [[1, 0], [2, -1]]
+b = [[1, 0], [2, 1]]
+
+print(horizontalRelation(a, b))
+
+
+# Make tree of obstacle segments for vertical split lines. "Time" is on y-axis
+def makeVerticalPersistentTree(obstacles, costs, relation, equality):
+    tree = persistentRBTree(relation, equality)
+
+    # Just a list of all points with costs
     points = []
     for i, obstacle in enumerate(obstacles):
         for vertex in obstacle:
             points.append([vertex, costs[i]])
 
-    # Sort them by y, first has lowst
+    # Sort them by y, first has lowest
     sortedPoints = sorted(points, key=lambda point: point[0][1])
 
     for point in sortedPoints:
         # two neighbors in obstacle
         neighbors = helper.findObstacleEdges(obstacles, point[0])
-
         if neighbors:
-
             for nh in neighbors:
                 # not considering "= case" since the obstacle segments in such cases are not positive or negative
                 # insert
                 if nh[1] > point[0][1]:
-                    key = point[0][0]  # Dont know what key should be!!!
-                    if nh[0] > point[0][0]:
-                        key += 0.000001
+                    key = [point[0], nh]  # keys are endpoints of segment
+                    if nh[0] != point[0][0]:
                         # val is 1st vertex of edge, 2nd, cost of obstacle of edge
-                        tree.insert(key, [point[0], nh, point[1]], point[0][1])
-                    elif nh[0] < point[0][0]:
-                        key -= 0.000001
                         tree.insert(key, [point[0], nh, point[1]], point[0][1])
                 # delete
                 elif nh[1] < point[0][1]:
-                    key = nh[0]
-                    if nh[0] < point[0][0]:
-                        key += 0.000001
-                        tree.delete(key, point[0][1])
-                    elif nh[0] > point[0][0]:
-                        key -= 0.000001
-                        tree.delete(key, point[0][1])
+                    key = [nh, point[0]]
+                    tree.delete(key, point[0][1])
+    return tree
+
+
+# Make tree of obstacle segments for horizontal split lines. "Time" is on x-axis
+def makeHorizontalPersistentTree(obstacles, costs, relation, equality):
+    tree = persistentRBTree(relation, equality)
+
+    points = []
+    for i, obstacle in enumerate(obstacles):
+        for vertex in obstacle:
+            points.append([vertex, costs[i]])
+
+    # Sort them by x, first has lowest
+    sortedPoints = sorted(points, key=lambda point: point[0][0])
+
+    for point in sortedPoints:
+        neighbors = helper.findObstacleEdges(obstacles, point[0])
+        if neighbors:
+            for nh in neighbors:
+                if nh[0] > point[0][0]:
+                    key = [point[0], nh]
+                    if nh[1] != point[0][1]:
+                        tree.insert(key, [point[0], nh, point[1]], point[0][0])
+                elif nh[0] < point[0][0]:
+                    key = [nh, point[0]]
+                    tree.delete(key, point[0][0])
     return tree
 
 
@@ -205,8 +276,27 @@ def cost(v, u, obstacles, costs):
 
 
 # TODO
-# Finds first positive slope segmenet that intersects (v,u)
-def positiveObstacleSegment(v, u, obstacles):
+# Finds first positive slope segmenet that intersects (v,u).
+# (v,u) is horizontal or vertical
+def positiveObstacleSegment(v, u, tree):
+    if v[0] == u[0]:  # (u,v) vertical
+        lb = [v, v]
+        hb = [u, u]
+        if v[1] < u[1]:
+            edges = tree.accessRange(lb, hb, v[0])
+        else:
+            edges = tree.accessRange(hb, lb, v[0])
+    elif v[1] == u[1]:  # (u,v) horiznotal
+        if v[0] < u[0]:
+            edges = tree.accessRange(lb, hb, v[1])
+        else:
+            edges = tree.accessRange(hb, lb, v[1])
+
+    # v is projection of u so we need the edge closest to u with pos/neg slope.
+    for edge in edges:
+        node, edge = edge[0], edge[1]
+        cost = node.val
+
     return ((0, 0), (1, 1))
 
 
@@ -345,5 +435,6 @@ obstacles = [
 ]
 costs = [3, 3]
 
-tree = makePersistentTree(obstacles, costs)
-tree.printTree(-1)
+tree = makeHorizontalPersistentTree(obstacles, costs, horizontalRelation, equality)
+tree.printTree(3)
+print(tree.accessRange([[2.7, -0.5], [2.7, -0.5]], [[2.7, 0.5], [2.7, 0.5]], 2.5))
