@@ -104,6 +104,7 @@ def intersect(p, q, obstacle):
     return False
 
 
+# If segments p1,p2 and p3,p4 intersect
 def intersect2(p1, p2, p3, p4):
     x1, y1 = p1
     x2, y2 = p2
@@ -158,7 +159,6 @@ def costOfSegment(v, w, root, costs):
         return 0
 
     totalCost = 0
-    count = 0
     # want to keep track of costs
     costDict = {}
 
@@ -170,7 +170,6 @@ def costOfSegment(v, w, root, costs):
             start, end, _, cost, obstacleName = node.key
             if intersect2(v, w, start, end):
                 totalCost += cost
-                count += 1
                 if obstacleName in costDict:
                     costDict.pop(obstacleName)
                 else:
@@ -358,3 +357,65 @@ def findObstacleEdges(obstacles, point):
             next_index = (index + 1) % len(obstacle)
             return [obstacle[prev_index], obstacle[next_index]]
     return None
+
+
+# does an edge [v,u] have positive slope
+def edgeOrientiation(edge):
+    [[v1, v2], [u1, u2]] = edge
+    if v1 < u1:
+        return v2 < u2
+    else:
+        return u2 < v2
+
+
+def intersectionPoint(A1, A2, B1, B2):
+    # Extract coordinates
+    x1, y1 = A1
+    x2, y2 = A2
+    x3, y3 = B1
+    x4, y4 = B2
+
+    # Compute determinants
+    denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+
+    if denom == 0:
+        # Lines are parallel or coincident
+        return None
+
+    # Compute intersection point
+    px = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denom
+    py = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denom
+
+    # Check if the intersection point is on both line segments
+    if (
+        min(x1, x2) <= px <= max(x1, x2)
+        and min(y1, y2) <= py <= max(y1, y2)
+        and min(x3, x4) <= px <= max(x3, x4)
+        and min(y3, y4) <= py <= max(y3, y4)
+    ):
+        return (px, py)
+
+    return None
+
+def costHelper(edges):
+    totalCost = 0
+    costDict = {}
+    for edge in edges:
+        node, edge = edge[0], edge[1]
+        cost = node.val[2]
+        obstacleIndex = node.val[3]
+        if obstacleIndex in costDict:
+            costDict.pop(obstacleIndex)
+        else:
+            costDict[obstacleIndex] = cost
+        totalCost += cost
+
+    if len(costDict) == 0:
+        totalCost /= 2
+    else:
+        singleCosts = 0
+        for obstacleName in costDict.keys():
+            singleCosts += costDict[obstacleName]
+        totalCost = (totalCost - singleCosts) / 2 + singleCosts
+        
+    return totalCost

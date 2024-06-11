@@ -217,12 +217,12 @@ class persistentRBTree:
                 )
             ):
                 return (
-                    inorderHelperTR(parent)
+                    inorderHelperLR(rightChild)
                     + [(node, node.key)]
-                    + inorderHelperLR(rightChild)
+                    + inorderHelperTR(parent)
                 )
             else:
-                return [(node, node.key)] + inorderHelperLR(rightChild)
+                return inorderHelperLR(rightChild) + [(node, node.key)]
 
         return inorderHelperTR(lowestNode)
 
@@ -816,4 +816,4 @@ tree = persistentRBTree(relation, equality)
 # print("inorder Traversal:")
 # print(tree.inorderTraversal(4))
 # print("range:")
-# print(tree.accessRange(30, 40, 4))
+# print(tree.accessRange(7, 45, 4))
