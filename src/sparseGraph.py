@@ -79,10 +79,10 @@ def horizontalRelation(a, b):
             return b != high
 
 
-a = [[1, 0], [2, -1]]
-b = [[1, 0], [2, 1]]
+# a = [[1, 0], [2, -1]]
+# b = [[1, 0], [2, 1]]
 
-print(horizontalRelation(a, b))
+# print(horizontalRelation(a, b))
 
 
 # Make tree of obstacle segments for vertical split lines. "Time" is on y-axis
@@ -161,40 +161,25 @@ def makeHorizontalPersistentTree(obstacles, costs, relation, equality):
 
 # TODO
 # Computes cost of edge (v,u)
-def cost(v, u, tree):
+def costFunction(v, u, tree):
     # get all edges that intersect (u,v)
     if v[0] == u[0]:  # (u,v) vertical
         lb = [v, [v[0], v[1] + epsilon]]
         hb = [u, [u[0], u[1] + epsilon]]
         if v[1] < u[1]:
             edges = tree.accessRange(lb, hb, v[0])
-            # Small preturbations to check for degenerate cases
-            # For example if line segment passes through an obstalce right through its vertices,
-            # the obstacle wont be seen by this algorithm. But if we move the line a bit higher or lower,
-            # it will be seen.
-            edgesPlus = tree.accessRange(lb, hb, v[0] + 2 * epsilon)
-            edgesMinus = tree.accessRange(lb, hb, v[0] - 2 * epsilon)
         else:
             edges = tree.accessRange(hb, lb, v[0])
-            edgesPlus = tree.accessRange(hb, lb, v[0] + 2 * epsilon)
-            edgesMinus = tree.accessRange(hb, lb, v[0] - 2 * epsilon)
     elif v[1] == u[1]:  # (u,v) horiznotal
         lb = [v, [v[0], v[1] + epsilon]]
         hb = [u, [u[0], u[1] + epsilon]]
         if v[0] < u[0]:
             edges = tree.accessRange(lb, hb, v[1])
-            edgesPlus = tree.accessRange(lb, hb, v[0] + 2 * epsilon)
-            edgesMinus = tree.accessRange(lb, hb, v[0] - 2 * epsilon)
+
         else:
             edges = tree.accessRange(hb, lb, v[1])
-            edgesPlus = tree.accessRange(hb, lb, v[0] + 2 * epsilon)
-            edgesMinus = tree.accessRange(hb, lb, v[0] - 2 * epsilon)
 
-    return max(
-        helper.costHelper(edges),
-        helper.costHelper(edgesPlus),
-        helper.costHelper(edgesMinus),
-    )
+    return helper.costHelper(edges)
 
 
 # Finds first positive or negative slope segmenet that intersects (v,u).
@@ -252,16 +237,19 @@ def obstacleSegment(v, u, tree, verticalRelation, horizontalRelation, positive=T
     return None
 
 
-# TODO
+# TODO AVOID ADDING DUPLICATE VERTICES AND EDGES!!!!!!!!!!
 # This new graph should start as the viability graph
 # vertical == True then vertical split line otherwise horizontal
-def Recurse(vertices, start, goal, obstacles, costs, budget, tree, vertical=True):
+# We need both trees. if vertical we need vertical tree for all costs,
+# except when connecting steiner vertices at the end.
+def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
     # This function is going to returna list if all edges and vertices that need to be added to our viability graph
-    newVertices = []
+    steinerVertices = []  # new vertices that are on split line
+    newVertices = []  # new vertices not on split line
     newEdges = []
 
     if len(vertices) <= 1:
-        return [newVertices, newEdges]
+        return [[], []]
 
     # get median x coordiante
     coordinates = []
@@ -274,18 +262,18 @@ def Recurse(vertices, start, goal, obstacles, costs, budget, tree, vertical=True
 
     for vertex in vertices:
         if vertical:
-            projectedVertex = (median, vertex[1])
+            projectedVertex = [median, vertex[1]]
             splitLine = [[median, math.inf], [median, -math.inf]]
         else:
-            projectedVertex = (vertex[0], median)
+            projectedVertex = [vertex[0], median]
             splitLine = [[math.inf, median], [-math.inf, median]]
-        cost = cost(vertex, projectedVertex, tree)
+        cost = costFunction(vertex, projectedVertex, tree1)
 
         # a) First add the projected vertex to graph
         if cost <= budget:
             # newGraph.addVertex(projectedVertex)
             # newGraph.addEdge(vertex,projectedVertex, cost, helper.distance(vertex,projectedVertex))
-            newVertices.append(projectedVertex)
+            steinerVertices.append(projectedVertex)
             newEdges.append(
                 (
                     vertex,
@@ -297,10 +285,10 @@ def Recurse(vertices, start, goal, obstacles, costs, budget, tree, vertical=True
 
         # b),c) Check first intersecting obstacle segments
         posSegment = obstacleSegment(
-            projectedVertex, vertex, tree, verticalRelation, horizontalRelation, True
+            projectedVertex, vertex, tree1, verticalRelation, horizontalRelation, True
         )
         negSegment = obstacleSegment(
-            projectedVertex, vertex, tree, verticalRelation, horizontalRelation, False
+            projectedVertex, vertex, tree1, verticalRelation, horizontalRelation, False
         )
 
         # If segment intersects splitline, add bypass vertices
@@ -313,7 +301,7 @@ def Recurse(vertices, start, goal, obstacles, costs, budget, tree, vertical=True
             )
             if bypass2:
                 newVertices.append(bypass1)
-                newVertices.append(bypass2)
+                steinerVertices.append(bypass2)
                 newEdges.append(
                     (
                         bypass1,
@@ -326,7 +314,7 @@ def Recurse(vertices, start, goal, obstacles, costs, budget, tree, vertical=True
                     (
                         vertex,
                         bypass1,
-                        cost(vertex, bypass1, obstacles, costs),
+                        costFunction(vertex, bypass1, tree1),
                         helper.distance(vertex, bypass1),
                     )
                 )
@@ -340,7 +328,7 @@ def Recurse(vertices, start, goal, obstacles, costs, budget, tree, vertical=True
             )
             if bypass2:
                 newVertices.append(bypass1)
-                newVertices.append(bypass2)
+                steinerVertices.append(bypass2)
                 newEdges.append(
                     (
                         bypass1,
@@ -353,17 +341,23 @@ def Recurse(vertices, start, goal, obstacles, costs, budget, tree, vertical=True
                     (
                         vertex,
                         bypass1,
-                        cost(vertex, bypass1, obstacles, costs),
+                        costFunction(vertex, bypass1, tree1),
                         helper.distance(vertex, bypass1),
                     )
                 )
 
-        # d) Connect adjacent "Steiner" (new) vertices
-        sortedVertices = sorted(newVertices, key=lambda vertex: vertex[1])
-        for i in range(len(sortedVertices) - 1):
-            v = sortedVertices[i]
-            u = sortedVertices[i + 1]
-            cost = cost(v, u, obstacles, costs)
+        # d) Connect adjacent new vertices on the split line
+        if vertical:
+            sortingParameter = 1
+        else:
+            sortingParameter = 0
+        sortedSteinerVertices = sorted(
+            steinerVertices, key=lambda vertex: vertex[sortingParameter]
+        )
+        for i in range(len(sortedSteinerVertices) - 1):
+            v = sortedSteinerVertices[i]
+            u = sortedSteinerVertices[i + 1]
+            cost = costFunction(v, u, tree2)
             if cost <= budget:
                 newEdges.append(
                     (
@@ -380,28 +374,32 @@ def Recurse(vertices, start, goal, obstacles, costs, budget, tree, vertical=True
     rightVertices = []
     for vertex in vertices:
         if vertical:
-            if vertex[0] <= median:
+            if vertex[0] < median:
                 leftVertices.append(vertex)
-            else:
+            elif vertex[0] > median:
                 rightVertices.append(vertex)
         else:
-            if vertex[1] <= median:
+            if vertex[1] < median:
                 leftVertices.append(vertex)
-            else:
+            elif vertex[1] > median:
                 rightVertices.append(vertex)
 
     return [
         newVertices
-        + Recurse(rightVertices, start, goal, obstacles, costs, budget)[0]
-        + Recurse(leftVertices, start, goal, obstacles, costs, budget)[0],
+        + steinerVertices
+        + Recurse(rightVertices, obstacles, costs, budget, tree1, tree2, vertical)[0]
+        + Recurse(leftVertices, obstacles, costs, budget, tree1, tree2, vertical)[0],
         newEdges
-        + Recurse(rightVertices, start, goal, obstacles, costs, budget)[1]
-        + Recurse(leftVertices, start, goal, obstacles, costs, budget)[1],
+        + Recurse(rightVertices, obstacles, costs, budget, tree1, tree2, vertical)[1]
+        + Recurse(leftVertices, obstacles, costs, budget, tree1, tree2, vertical)[1],
     ]
 
 
 # TODO
-def sparsify(graph, start, goal, obstacles, costs, budget):
+def sparsify(start, goal, obstacles, costs, budget):
+    # (-1). Initialize graph and all points
+    graph = Graph()
+    vertices = [start] + [goal] + helper.obstacleVertices(obstacles)
 
     # 0. Make trees of obstacle segments
 
@@ -414,7 +412,7 @@ def sparsify(graph, start, goal, obstacles, costs, budget):
 
     # 1. Step add new edges and vertices, vertical
     newVerticesV, newEdgesV = Recurse(
-        graph, start, goal, obstacles, costs, budget, verticalTree, True
+        vertices, obstacles, costs, budget, verticalTree, horizontalTree, True
     )
 
     for vertex in newVerticesV:
@@ -425,7 +423,13 @@ def sparsify(graph, start, goal, obstacles, costs, budget):
 
     # 2. Step add new edges and vertices, horizontal
     newVerticesH, newEdgesH = Recurse(
-        graph, start, goal, obstacles, costs, budget, horizontalTree, False
+        vertices,
+        obstacles,
+        costs,
+        budget,
+        horizontalTree,
+        verticalTree,
+        False,
     )
 
     for vertex in newVerticesH:
@@ -435,34 +439,51 @@ def sparsify(graph, start, goal, obstacles, costs, budget):
         graph.addEdge(beginning, end, cost, distance)
 
     # 3. Add edges between consecutive edges on boundaries
+
+    for obstacle in obstacles:
+        for i in range(len(obstacle)):
+            u = obstacle[i]
+            v = obstacle[
+                (i + 1) % len(obstacle)
+            ]  # To connect the last point to the first point
+            graph.addEdge(u, v, 0, helper.distance(u, v))
+
     return graph
 
 
-# obstacles = [
-#     [[1, 0], [2, -1], [2, 1]],
-#     [[3, 0], [2.1, -1], [2.1, 1]],
-# ]
-# costs = [3, 3]
-
+start = [0, 0]
+goal = [4, 0]
 obstacles = [
-    [[1, 0], [2, -1], [3, 0], [2, 1]],
+    [[1, 0], [2, -1], [2, 1]],
+    [[3, 0], [2.1, -1], [2.1, 1]],
 ]
-costs = [3]
+costs = [3, 3]
+budget = 3
 
+# obstacles = [
+#     [[1, 0], [2, -1], [3, 0], [2, 1]],
+# ]
+# costs = [3]
 
-tree = makeVerticalPersistentTree(obstacles, costs, verticalRelation, equality)
-tree.printTree(0.1)
-print(
-    tree.accessRange(
-        [[0.5, -1], [0.5, -1 + epsilon]], [[2.5, -1], [2.5, -1 + epsilon]], -1
-    )
-)
-print("first neg slope is:")
-print(
-    obstacleSegment(
-        [2.5, -0.9], [0.5, -0.9], tree, verticalRelation, horizontalRelation, False
-    )
-)
+graph = sparsify(start, goal, obstacles, costs, budget)
+helper.printGraph(graph)
 
-print("cost is:")
-print(cost([0, 0], [4, 0], tree))
+t = {1, 2}
+h = {2, 3}
+print(t.union(h))
+# tree = makeVerticalPersistentTree(obstacles, costs, verticalRelation, equality)
+# tree.printTree(0.1)
+# print(
+#     tree.accessRange(
+#         [[0.5, -1], [0.5, -1 + epsilon]], [[2.5, -1], [2.5, -1 + epsilon]], -1
+#     )
+# )
+# print("first neg slope is:")
+# print(
+#     obstacleSegment(
+#         [2.5, -0.9], [0.5, -0.9], tree, verticalRelation, horizontalRelation, False
+#     )
+# )
+
+# print("cost is:")
+# print(costFunction([0, 0], [4, 0], tree))

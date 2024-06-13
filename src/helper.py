@@ -393,9 +393,18 @@ def intersectionPoint(A1, A2, B1, B2):
         and min(x3, x4) <= px <= max(x3, x4)
         and min(y3, y4) <= py <= max(y3, y4)
     ):
-        return (px, py)
+        return [px, py]
 
     return None
+
+
+def obstacleVertices(obstacles):
+    vertices = []
+    for obstacle in obstacles:
+        for vertex in obstacle:
+            vertices.append(vertex)
+    return vertices
+
 
 def costHelper(edges):
     totalCost = 0
@@ -417,5 +426,46 @@ def costHelper(edges):
         for obstacleName in costDict.keys():
             singleCosts += costDict[obstacleName]
         totalCost = (totalCost - singleCosts) / 2 + singleCosts
-        
+
     return totalCost
+
+
+# functions for rotating the points in plane
+def rotatepoint(x, y, alpha):
+    # Convert angle alpha to radians
+    alphaRad = math.radians(alpha)
+
+    # Rotation matrix components
+    cosAlpha = math.cos(alphaRad)
+    sinAlpha = math.sin(alphaRad)
+
+    # New coordinates
+    xNew = x * cosAlpha + y * sinAlpha
+    yNew = -x * sinAlpha + y * cosAlpha
+
+    return xNew, yNew
+
+
+# The other way
+def revertpoint(xNew, yNew, alpha):
+    alphaRad = math.radians(alpha)
+    cosAlpha = math.cos(alphaRad)
+    sinAlpha = math.sin(alphaRad)
+    x = xNew * cosAlpha - yNew * sinAlpha
+    y = xNew * sinAlpha + yNew * cosAlpha
+
+    return x, y
+
+
+def rotationalEquality(p1, p2, angle):
+    x1, y1 = p1
+    x2, y2 = p2
+    newX1, newY1 = rotatepoint(x1, y1, angle)
+    newX2, newY2 = revertpoint(newX1, newY1, angle)
+    return (x2, y2) == (newX2, newY2)
+
+
+a, b = rotatepoint(3, 4, 45)
+c, d = revertpoint(a, b, 45)
+print(rotationalEquality((3, 4), (c, d), 45))
+print(c, d)
