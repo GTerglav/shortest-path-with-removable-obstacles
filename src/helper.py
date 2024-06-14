@@ -1,7 +1,10 @@
 import math
-
+import sys
 from matplotlib import pyplot as plt
 import numpy as np
+
+# smalles positive number
+epsilon = sys.float_info.epsilon
 
 
 def distance(p1, p2):
@@ -462,10 +465,5 @@ def rotationalEquality(p1, p2, angle):
     x2, y2 = p2
     newX1, newY1 = rotatepoint(x1, y1, angle)
     newX2, newY2 = revertpoint(newX1, newY1, angle)
-    return (x2, y2) == (newX2, newY2)
-
-
-a, b = rotatepoint(3, 4, 45)
-c, d = revertpoint(a, b, 45)
-print(rotationalEquality((3, 4), (c, d), 45))
-print(c, d)
+    diff = abs(x2 - newX2) + abs(y2 - newY2)
+    return diff < 0.000001

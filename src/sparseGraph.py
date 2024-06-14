@@ -1,34 +1,137 @@
 import math
 import statistics
 import time
-
 from matplotlib import pyplot as plt
 import numpy as np
 from AVLTree import AVLTree, TreeNode
-
-from dijkstra import dijkstra
+from newDijkstra import dijkstra
 import helper
-
 from problems import problemParameters
 import problems
-
 from persistentRBTree import persistentRBTree
-
 import sys
 from functools import cmp_to_key
 
+
 # Viability graph algoritm as before
-from sweepViabilityGraph import Graph, viableVerticesFromV, viable, viabilityGraph
+# from sweepViabilityGraph import Graph, viableVerticesFromV, viable, viabilityGraph
 
 
-######################## Now to sparsify the graph ###############
+# This graph has dict for neighbors, also i need union of graphs
+class Graph:
+    def __init__(self):
+        self.vertices = {}
+
+    def addVertex(self, index):
+        self.vertices[tuple(index)] = {}
+
+    def addEdge(self, start, end, cost, length):
+        startTuple = tuple(start)
+        endTuple = tuple(end)
+        self.vertices.setdefault(startTuple, {})[endTuple] = (cost, length)
+
+    # Checks if vertex already in graph (because rotation)
+    def findVertex(self, vertex, angle):
+        for point in self.vertices:
+            if point == vertex:
+                return 0
+            if helper.rotationalEquality(vertex, point, angle):
+                return point
+        return -1
+
+    # Union of two graphs, the second had plane rotated by angle
+    # Points (3,4) and (3.000000000001,4.000000000001) are the same. I call them "rotationaly equal"
+    def union(self, other, angle):
+        unionGraph = Graph()
+
+        # Add all vertices and edges from the current graph to the union graph
+        for vertex, edges in self.vertices.items():
+            unionGraph.addVertex(vertex)
+            for neighbor, (cost, length) in edges.items():
+                unionGraph.addEdge(vertex, neighbor, cost, length)
+
+        # Here vertices from rotated plane will not be exactly the same due to numeric calculations
+        for vertex, edges in other.vertices.items():
+            # if vertex or its rotational equal not already in graph
+            if (
+                unionGraph.findVertex(vertex, angle) == -1
+                or unionGraph.findVertex(vertex, angle) == 0
+            ):
+                if unionGraph.findVertex(vertex, angle) == -1:
+                    unionGraph.addVertex(vertex)
+                for neighbor, (cost, length) in edges.items():
+                    if unionGraph.findVertex(neighbor, angle) == 0:
+                        unionGraph.addEdge(vertex, neighbor, cost, length)
+                        unionGraph.addEdge(neighbor, vertex, cost, length)
+                    elif unionGraph.findVertex(neighbor, angle) == -1:
+                        unionGraph.addVertex(neighbor)
+                        unionGraph.addEdge(vertex, neighbor, cost, length)
+                        unionGraph.addEdge(neighbor, vertex, cost, length)
+                    else:
+                        # replace the neighbor with the rotational equal
+                        unionGraph.addEdge(
+                            vertex, unionGraph.findVertex(neighbor, angle), cost, length
+                        )
+                        unionGraph.addEdge(
+                            unionGraph.findVertex(neighbor, angle), vertex, cost, length
+                        )
+            else:
+                # point and vertex are rotationaly equal
+                point = unionGraph.findVertex(vertex, angle)
+                for neighbor, (cost, length) in edges.items():
+                    if unionGraph.findVertex(neighbor, angle) == 0:
+                        unionGraph.addEdge(point, neighbor, cost, length)
+                        unionGraph.addEdge(neighbor, point, cost, length)
+                    elif unionGraph.findVertex(neighbor, angle) == -1:
+                        unionGraph.addVertex(neighbor)
+                        unionGraph.addEdge(point, neighbor, cost, length)
+                        unionGraph.addEdge(neighbor, point, cost, length)
+                    else:
+                        # replace the neighbor with the rotational equal
+                        unionGraph.addEdge(
+                            point, unionGraph.findVertex(neighbor, angle), cost, length
+                        )
+                        unionGraph.addEdge(
+                            unionGraph.findVertex(neighbor, angle), point, cost, length
+                        )
+        return unionGraph
+
+
+# Have to change it since edges also use dict now
+def createCopiesOfGraph(graph, start, goal, budget, epsilon):
+    newGraph = Graph()
+
+    for vertex, neighbors in graph.vertices.items():
+        numCopies = math.ceil(budget / epsilon) + 1
+        for k in range(numCopies):
+            newVertex = (vertex[0], vertex[1], k)
+            for neighbor, (cost, length) in neighbors.items():
+                new_k = max(k, math.floor((k * epsilon + cost) / epsilon))
+                if new_k <= numCopies - 1:
+                    newNeighbor = (neighbor[0], neighbor[1], new_k)
+                    newGraph.addEdge(newVertex, newNeighbor, 0, length)
+
+    # add start and sink and connect them to copies
+    newStart = (-1, -1, -1)
+    newSink = (-2, -2, -2)
+    newGraph.addVertex(newStart)
+    newGraph.addVertex(newSink)
+    # Create new start (indexed as -1) and sink (indexed as -2) vertices and connect them to all of their copies
+    for i in range(numCopies):
+        newGraph.addEdge(newStart, (start[0], start[1], i), 0, 0)
+        newGraph.addEdge((start[0], start[1], i), newStart, 0, 0)
+        newGraph.addEdge((goal[0], goal[1], i), newSink, 0, 0)
+        newGraph.addEdge(newSink, (goal[0], goal[1], i), 0, 0)
+    return newGraph
+
+
+######################## Now to create a sparse graph ###############
 
 # Very small positive number
 epsilon = sys.float_info.epsilon
 
-# Define relation and equality for addding obstacle segments to tree
 
-
+# Next I define relations and equality for addding obstacle segments to tree
 # a,b line segments of form [point1,point2]
 def equality(a, b):
     return sorted(a) == sorted(b)
@@ -77,12 +180,6 @@ def horizontalRelation(a, b):
             return b == high
         else:
             return b != high
-
-
-# a = [[1, 0], [2, -1]]
-# b = [[1, 0], [2, 1]]
-
-# print(horizontalRelation(a, b))
 
 
 # Make tree of obstacle segments for vertical split lines. "Time" is on y-axis
@@ -159,8 +256,9 @@ def makeHorizontalPersistentTree(obstacles, costs, relation, equality):
     return tree
 
 
-# TODO
 # Computes cost of edge (v,u)
+# The cost is wrong in the case that (v,u) passes through two obstacle vertices of same obstacle.
+# Then it wont add the obstacle to cost. Dont know how to solve TODO
 def costFunction(v, u, tree):
     # get all edges that intersect (u,v)
     if v[0] == u[0]:  # (u,v) vertical
@@ -182,7 +280,7 @@ def costFunction(v, u, tree):
     return helper.costHelper(edges)
 
 
-# Finds first positive or negative slope segmenet that intersects (v,u).
+# Finds first positive or negative slope segment that intersects (v,u).
 # (v,u) is horizontal or vertical
 def obstacleSegment(v, u, tree, verticalRelation, horizontalRelation, positive=True):
     # Need for sorting
@@ -237,11 +335,10 @@ def obstacleSegment(v, u, tree, verticalRelation, horizontalRelation, positive=T
     return None
 
 
-# TODO AVOID ADDING DUPLICATE VERTICES AND EDGES!!!!!!!!!!
 # This new graph should start as the viability graph
 # vertical == True then vertical split line otherwise horizontal
 # We need both trees. if vertical we need vertical tree for all costs,
-# except when connecting steiner vertices at the end.
+# except when connecting steiner vertices at the end. Then we need horizontal tree
 def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
     # This function is going to returna list if all edges and vertices that need to be added to our viability graph
     steinerVertices = []  # new vertices that are on split line
@@ -282,6 +379,14 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
                     helper.distance(vertex, projectedVertex),
                 )
             )
+            newEdges.append(
+                (
+                    projectedVertex,
+                    vertex,
+                    cost,
+                    helper.distance(vertex, projectedVertex),
+                )
+            )
 
         # b),c) Check first intersecting obstacle segments
         posSegment = obstacleSegment(
@@ -312,8 +417,24 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
                 )
                 newEdges.append(
                     (
+                        bypass2,
+                        bypass1,
+                        0,
+                        helper.distance(bypass1, bypass2),
+                    )
+                )
+                newEdges.append(
+                    (
                         vertex,
                         bypass1,
+                        costFunction(vertex, bypass1, tree1),
+                        helper.distance(vertex, bypass1),
+                    )
+                )
+                newEdges.append(
+                    (
+                        bypass1,
+                        vertex,
                         costFunction(vertex, bypass1, tree1),
                         helper.distance(vertex, bypass1),
                     )
@@ -339,8 +460,24 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
                 )
                 newEdges.append(
                     (
+                        bypass2,
+                        bypass1,
+                        0,
+                        helper.distance(bypass1, bypass2),
+                    )
+                )
+                newEdges.append(
+                    (
                         vertex,
                         bypass1,
+                        costFunction(vertex, bypass1, tree1),
+                        helper.distance(vertex, bypass1),
+                    )
+                )
+                newEdges.append(
+                    (
+                        bypass1,
+                        vertex,
                         costFunction(vertex, bypass1, tree1),
                         helper.distance(vertex, bypass1),
                     )
@@ -363,6 +500,14 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
                     (
                         v,
                         u,
+                        cost,
+                        helper.distance(v, u),
+                    )
+                )
+                newEdges.append(
+                    (
+                        u,
+                        v,
                         cost,
                         helper.distance(v, u),
                     )
@@ -396,18 +541,32 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
 
 
 # TODO
-def sparsify(start, goal, obstacles, costs, budget):
+def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
     # (-1). Initialize graph and all points
     graph = Graph()
     vertices = [start] + [goal] + helper.obstacleVertices(obstacles)
 
+    # "Rotate the plane"
+    rotatedVertices = []
+    for vertex in vertices:
+        newX, newY = helper.rotatepoint(vertex[0], vertex[1], angle)
+        rotatedVertices.append([newX, newY])
+
+    rotatedObstacles = []
+    for obstacle in obstacles:
+        rotatedObstacle = []
+        for vertex in obstacle:
+            newX, newY = helper.rotatepoint(vertex[0], vertex[1], angle)
+            rotatedObstacle.append([newX, newY])
+        rotatedObstacles.append(rotatedObstacle)
+
     # 0. Make trees of obstacle segments
 
     horizontalTree = makeHorizontalPersistentTree(
-        obstacles, costs, horizontalRelation, equality
+        rotatedObstacles, costs, horizontalRelation, equality
     )
     verticalTree = makeVerticalPersistentTree(
-        obstacles, costs, verticalRelation, equality
+        rotatedObstacles, costs, verticalRelation, equality
     )
 
     # 1. Step add new edges and vertices, vertical
@@ -416,9 +575,16 @@ def sparsify(start, goal, obstacles, costs, budget):
     )
 
     for vertex in newVerticesV:
+        # Rotate the plane back
+        vertex[0], vertex[1] = helper.revertpoint(vertex[0], vertex[1], angle)
         graph.addVertex(vertex)
 
     for beginning, end, cost, distance in newEdgesV:
+        # Rotate the plane back
+        beginning[0], beginning[1] = helper.revertpoint(
+            beginning[0], beginning[1], angle
+        )
+        end[0], end[1] = helper.revertpoint(end[0], end[1], angle)
         graph.addEdge(beginning, end, cost, distance)
 
     # 2. Step add new edges and vertices, horizontal
@@ -433,13 +599,17 @@ def sparsify(start, goal, obstacles, costs, budget):
     )
 
     for vertex in newVerticesH:
+        vertex[0], vertex[1] = helper.revertpoint(vertex[0], vertex[1], angle)
         graph.addVertex(vertex)
 
     for beginning, end, cost, distance in newEdgesH:
+        beginning[0], beginning[1] = helper.revertpoint(
+            beginning[0], beginning[1], angle
+        )
+        end[0], end[1] = helper.revertpoint(end[0], end[1], angle)
         graph.addEdge(beginning, end, cost, distance)
 
-    # 3. Add edges between consecutive edges on boundaries
-
+    # 3. Add edges between consecutive vertices of obstacles
     for obstacle in obstacles:
         for i in range(len(obstacle)):
             u = obstacle[i]
@@ -451,39 +621,56 @@ def sparsify(start, goal, obstacles, costs, budget):
     return graph
 
 
-start = [0, 0]
-goal = [4, 0]
-obstacles = [
-    [[1, 0], [2, -1], [2, 1]],
-    [[3, 0], [2.1, -1], [2.1, 1]],
-]
-costs = [3, 3]
-budget = 3
+# calls sparseGraph on rotated planes, then makes a union of graphs
+def rotateUnion(start, goal, obstacles, costs, budget, epsilon):
+    numberOfCopies = math.ceil(1 / epsilon)
+    angles = [i * 360 / numberOfCopies - 90 for i in range(numberOfCopies)]
 
-# obstacles = [
-#     [[1, 0], [2, -1], [3, 0], [2, 1]],
-# ]
-# costs = [3]
+    graph = sparseGraph(start, goal, obstacles, costs, budget, 0)
 
-graph = sparsify(start, goal, obstacles, costs, budget)
-helper.printGraph(graph)
+    for angle in angles:
+        newGraph = sparseGraph(start, goal, obstacles, costs, budget, angle)
+        graph = graph.union(newGraph, angle)
 
-t = {1, 2}
-h = {2, 3}
-print(t.union(h))
-# tree = makeVerticalPersistentTree(obstacles, costs, verticalRelation, equality)
-# tree.printTree(0.1)
-# print(
-#     tree.accessRange(
-#         [[0.5, -1], [0.5, -1 + epsilon]], [[2.5, -1], [2.5, -1 + epsilon]], -1
-#     )
-# )
-# print("first neg slope is:")
-# print(
-#     obstacleSegment(
-#         [2.5, -0.9], [0.5, -0.9], tree, verticalRelation, horizontalRelation, False
-#     )
-# )
+    return graph
 
-# print("cost is:")
-# print(costFunction([0, 0], [4, 0], tree))
+
+def main(problem, epsilon=None):
+    start = problem.start
+    goal = problem.goal
+    obstacles = problem.obstacles
+    costs = problem.costs
+    budget = problem.budget
+
+    if epsilon is None:
+        epsilon = problem.epsilon
+
+    startTime = time.time()
+    graph = rotateUnion(start, goal, obstacles, costs, budget, epsilon)
+    endTime = time.time()
+    print(f"Viability graph construction time {endTime - startTime} seconds")
+
+    copiedGraph = createCopiesOfGraph(graph, start, goal, budget, epsilon)
+
+    startVertex = (-1, -1, -1)
+    targetVertex = (-2, -2, -2)
+    shortestPath = dijkstra(copiedGraph, startVertex, targetVertex)
+
+    if shortestPath:
+        nicePath = shortestPath[1:-1]
+
+        # Plot the problem, then problem w/ shortest path, then viability graph
+        # helper.plotProblem(start, goal, obstacles, budget, costs)
+        # helper.plotPointsAndObstaclesSweep(
+        #     start, goal, obstacles, budget, costs, epsilon, nicePath
+        # )
+        # plotGraph(graph, start, goal, obstacles, costs, budget, epsilon)
+        print(f"Shortest path from {start} to {goal} is {nicePath}")
+        return nicePath
+    else:
+        print(f"No path found")
+        return []
+
+
+if __name__ == "__main__":
+    main(problems.problemError3, 1)  # Non deterministic lol
