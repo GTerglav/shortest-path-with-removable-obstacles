@@ -633,4 +633,4 @@ def main(problem, epsilon=None):
 
 
 if __name__ == "__main__":
-    main(problems.problem0, 1 / 4)
+    main(problems.problemError3, 1 / 2)

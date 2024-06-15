@@ -47,6 +47,8 @@ class persistentRBTree:
 
     # Returns current parent of node at time
     def getCurrentParent(self, node, time):
+        # if node is None:
+        #     return 0
         eligibleParents = [
             [t, parent] for t, parent in node.parents.items() if t <= time
         ]
@@ -55,6 +57,8 @@ class persistentRBTree:
 
     # Returns latest child node in chosen direction at time
     def getLatestChild(self, node, time, direction):  # direction is "right" or "left"
+        # if node is None:
+        #     return None
         # We separate "None" children and "node" children
         children = [
             pointer[2]
@@ -121,7 +125,7 @@ class persistentRBTree:
                 )
 
         else:
-            print("error: wrong time")
+            print("Access error: wrong time")
             return lastRight
 
     # find and return item in tree with smalles key value >= to key at time.
@@ -153,7 +157,7 @@ class persistentRBTree:
                 )  # Update lastLeft to this node
 
         else:
-            print("error: wrong time")
+            print("Left access error: wrong time")
             return lastLeft
 
     # Returns all items with lB <= key uB at time
@@ -251,7 +255,7 @@ class persistentRBTree:
                 )
 
         else:
-            print("error: wrong time")
+            print("Find parent error: wrong time")
             return lastNode
 
     # Adds pointer to node at time. Returns list of nodes that got copied during execution
@@ -391,6 +395,7 @@ class persistentRBTree:
         leftChild = self.getLatestChild(node, time, "left")
         while leftChild is not None:
             node = leftChild
+            leftChild = self.getLatestChild(node, time, "left")
         return node
 
     # Left rotation, also returns nodes that got copied
