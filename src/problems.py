@@ -122,7 +122,7 @@ problemError3 = problemParameters(
         [[3, 0], [2.1, -1], [2.1, 1]],
     ],
     costs=[3, 3],
-    budget=3,
+    budget=1,
     epsilon=0.5,
 )
 

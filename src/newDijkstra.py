@@ -1,6 +1,7 @@
 import heapq
 import helper
 
+
 def dijkstra(graph, start, target):
     # Initialize distances to all vertices as infinity
     distances = {vertex: float("inf") for vertex in graph.vertices}
@@ -29,10 +30,15 @@ def dijkstra(graph, start, target):
         # Update distances to neighbors
         for neighbor, (cost, dist) in graph.vertices[currentVertex].items():
             distance = currentDistance + dist
-            if distance < distances[neighbor]:
-                distances[neighbor] = distance
-                previous[neighbor] = currentVertex  # Update previous vertex
-                heapq.heappush(heap, (distance, neighbor))
+            try:
+                a = distance < distances[neighbor]
+            except:
+                print(f"whoopsie: {neighbor} not in vertices")
+            else:
+                if a:
+                    distances[neighbor] = distance
+                    previous[neighbor] = currentVertex  # Update previous vertex
+                    heapq.heappush(heap, (distance, neighbor))
 
     # If target vertex is not reachable, return None
     if target not in distances or distances[target] == float("inf"):

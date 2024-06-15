@@ -446,7 +446,7 @@ def rotatepoint(x, y, alpha):
     xNew = x * cosAlpha + y * sinAlpha
     yNew = -x * sinAlpha + y * cosAlpha
 
-    return xNew, yNew
+    return [xNew, yNew]
 
 
 # The other way
@@ -457,7 +457,7 @@ def revertpoint(xNew, yNew, alpha):
     x = xNew * cosAlpha - yNew * sinAlpha
     y = xNew * sinAlpha + yNew * cosAlpha
 
-    return x, y
+    return [x, y]
 
 
 def rotationalEquality(p1, p2, angle):
@@ -467,3 +467,15 @@ def rotationalEquality(p1, p2, angle):
     newX2, newY2 = revertpoint(newX1, newY1, angle)
     diff = abs(x2 - newX2) + abs(y2 - newY2)
     return diff < 0.000001
+
+
+def secondHighest(arr):
+    if len(arr) < 2:
+        return None
+    first, second = float("-inf"), float("-inf")
+    for number in arr:
+        if number >= first:
+            first, second = number, first
+        elif first >= number >= second:
+            second = number
+    return second if second != float("-inf") else None

@@ -42,17 +42,12 @@ class Graph:
     # Union of two graphs, the second had plane rotated by angle
     # Points (3,4) and (3.000000000001,4.000000000001) are the same. I call them "rotationaly equal"
     def union(self, other, angle):
-        unionGraph = Graph()
-
-        # Add all vertices and edges from the current graph to the union graph
-        for vertex, edges in self.vertices.items():
-            unionGraph.addVertex(vertex)
-            for neighbor, (cost, length) in edges.items():
-                unionGraph.addEdge(vertex, neighbor, cost, length)
+        # start with current graph
+        unionGraph = self
 
         # Here vertices from rotated plane will not be exactly the same due to numeric calculations
         for vertex, edges in other.vertices.items():
-            # if vertex or its rotational equal not already in graph
+            # if vertex's rotational equal not already in graph
             if (
                 unionGraph.findVertex(vertex, angle) == -1
                 or unionGraph.findVertex(vertex, angle) == 0
@@ -60,11 +55,11 @@ class Graph:
                 if unionGraph.findVertex(vertex, angle) == -1:
                     unionGraph.addVertex(vertex)
                 for neighbor, (cost, length) in edges.items():
-                    if unionGraph.findVertex(neighbor, angle) == 0:
-                        unionGraph.addEdge(vertex, neighbor, cost, length)
-                        unionGraph.addEdge(neighbor, vertex, cost, length)
-                    elif unionGraph.findVertex(neighbor, angle) == -1:
-                        unionGraph.addVertex(neighbor)
+                    # if neightbor not in graph
+                    if (
+                        unionGraph.findVertex(neighbor, angle) == 0
+                        or unionGraph.findVertex(neighbor, angle) == -1
+                    ):
                         unionGraph.addEdge(vertex, neighbor, cost, length)
                         unionGraph.addEdge(neighbor, vertex, cost, length)
                     else:
@@ -72,18 +67,17 @@ class Graph:
                         unionGraph.addEdge(
                             vertex, unionGraph.findVertex(neighbor, angle), cost, length
                         )
-                        unionGraph.addEdge(
-                            unionGraph.findVertex(neighbor, angle), vertex, cost, length
-                        )
+                        # unionGraph.addEdge(
+                        #     unionGraph.findVertex(neighbor, angle), vertex, cost, length
+                        # )
             else:
                 # point and vertex are rotationaly equal
                 point = unionGraph.findVertex(vertex, angle)
                 for neighbor, (cost, length) in edges.items():
-                    if unionGraph.findVertex(neighbor, angle) == 0:
-                        unionGraph.addEdge(point, neighbor, cost, length)
-                        unionGraph.addEdge(neighbor, point, cost, length)
-                    elif unionGraph.findVertex(neighbor, angle) == -1:
-                        unionGraph.addVertex(neighbor)
+                    if (
+                        unionGraph.findVertex(neighbor, angle) == 0
+                        or unionGraph.findVertex(neighbor, angle) == -1
+                    ):
                         unionGraph.addEdge(point, neighbor, cost, length)
                         unionGraph.addEdge(neighbor, point, cost, length)
                     else:
@@ -105,6 +99,7 @@ def createCopiesOfGraph(graph, start, goal, budget, epsilon):
         numCopies = math.ceil(budget / epsilon) + 1
         for k in range(numCopies):
             newVertex = (vertex[0], vertex[1], k)
+            newGraph.addVertex(newVertex)
             for neighbor, (cost, length) in neighbors.items():
                 new_k = max(k, math.floor((k * epsilon + cost) / epsilon))
                 if new_k <= numCopies - 1:
@@ -266,18 +261,30 @@ def costFunction(v, u, tree):
         hb = [u, [u[0], u[1] + epsilon]]
         if v[1] < u[1]:
             edges = tree.accessRange(lb, hb, v[0])
+            edgesPlus = tree.accessRange(lb, hb, v[0] + epsilon)
+            edgesMinus = tree.accessRange(lb, hb, v[0] - epsilon)
         else:
             edges = tree.accessRange(hb, lb, v[0])
+            edgesPlus = tree.accessRange(lb, hb, v[0] + epsilon)
+            edgesMinus = tree.accessRange(lb, hb, v[0] - epsilon)
     elif v[1] == u[1]:  # (u,v) horiznotal
         lb = [v, [v[0], v[1] + epsilon]]
         hb = [u, [u[0], u[1] + epsilon]]
         if v[0] < u[0]:
             edges = tree.accessRange(lb, hb, v[1])
+            edgesPlus = tree.accessRange(lb, hb, v[0] + epsilon)
+            edgesMinus = tree.accessRange(lb, hb, v[0] - epsilon)
 
         else:
             edges = tree.accessRange(hb, lb, v[1])
+            edgesPlus = tree.accessRange(lb, hb, v[0] + epsilon)
+            edgesMinus = tree.accessRange(lb, hb, v[0] - epsilon)
 
-    return helper.costHelper(edges)
+    return max(
+        helper.costHelper(edges),
+        helper.costHelper(edgesPlus),
+        helper.costHelper(edgesMinus),
+    )
 
 
 # Finds first positive or negative slope segment that intersects (v,u).
@@ -339,7 +346,7 @@ def obstacleSegment(v, u, tree, verticalRelation, horizontalRelation, positive=T
 # vertical == True then vertical split line otherwise horizontal
 # We need both trees. if vertical we need vertical tree for all costs,
 # except when connecting steiner vertices at the end. Then we need horizontal tree
-def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
+def Recurse(vertices, budget, tree1, tree2, vertical=True):
     # This function is going to returna list if all edges and vertices that need to be added to our viability graph
     steinerVertices = []  # new vertices that are on split line
     newVertices = []  # new vertices not on split line
@@ -348,7 +355,7 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
     if len(vertices) <= 1:
         return [[], []]
 
-    # get median x coordiante
+    # get median x or y coordiante
     coordinates = []
     for vertex in vertices:
         if vertical:
@@ -357,17 +364,20 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
             coordinates.append(vertex[1])
     median = statistics.median(coordinates)
 
+    if vertical:
+        splitLine = [[median, math.inf], [median, -math.inf]]
+    else:
+        splitLine = [[math.inf, median], [-math.inf, median]]
+
     for vertex in vertices:
         if vertical:
             projectedVertex = [median, vertex[1]]
-            splitLine = [[median, math.inf], [median, -math.inf]]
         else:
             projectedVertex = [vertex[0], median]
-            splitLine = [[math.inf, median], [-math.inf, median]]
-        cost = costFunction(vertex, projectedVertex, tree1)
 
+        cost = costFunction(vertex, projectedVertex, tree1)
         # a) First add the projected vertex to graph
-        if cost <= budget:
+        if cost <= budget and vertex != projectedVertex:
             # newGraph.addVertex(projectedVertex)
             # newGraph.addEdge(vertex,projectedVertex, cost, helper.distance(vertex,projectedVertex))
             steinerVertices.append(projectedVertex)
@@ -375,14 +385,6 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
                 (
                     vertex,
                     projectedVertex,
-                    cost,
-                    helper.distance(vertex, projectedVertex),
-                )
-            )
-            newEdges.append(
-                (
-                    projectedVertex,
-                    vertex,
                     cost,
                     helper.distance(vertex, projectedVertex),
                 )
@@ -417,24 +419,8 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
                 )
                 newEdges.append(
                     (
-                        bypass2,
-                        bypass1,
-                        0,
-                        helper.distance(bypass1, bypass2),
-                    )
-                )
-                newEdges.append(
-                    (
                         vertex,
                         bypass1,
-                        costFunction(vertex, bypass1, tree1),
-                        helper.distance(vertex, bypass1),
-                    )
-                )
-                newEdges.append(
-                    (
-                        bypass1,
-                        vertex,
                         costFunction(vertex, bypass1, tree1),
                         helper.distance(vertex, bypass1),
                     )
@@ -460,24 +446,8 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
                 )
                 newEdges.append(
                     (
-                        bypass2,
-                        bypass1,
-                        0,
-                        helper.distance(bypass1, bypass2),
-                    )
-                )
-                newEdges.append(
-                    (
                         vertex,
                         bypass1,
-                        costFunction(vertex, bypass1, tree1),
-                        helper.distance(vertex, bypass1),
-                    )
-                )
-                newEdges.append(
-                    (
-                        bypass1,
-                        vertex,
                         costFunction(vertex, bypass1, tree1),
                         helper.distance(vertex, bypass1),
                     )
@@ -495,19 +465,11 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
             v = sortedSteinerVertices[i]
             u = sortedSteinerVertices[i + 1]
             cost = costFunction(v, u, tree2)
-            if cost <= budget:
+            if cost <= budget and u != v:
                 newEdges.append(
                     (
                         v,
                         u,
-                        cost,
-                        helper.distance(v, u),
-                    )
-                )
-                newEdges.append(
-                    (
-                        u,
-                        v,
                         cost,
                         helper.distance(v, u),
                     )
@@ -528,15 +490,11 @@ def Recurse(vertices, obstacles, costs, budget, tree1, tree2, vertical=True):
                 leftVertices.append(vertex)
             elif vertex[1] > median:
                 rightVertices.append(vertex)
-
+    rightRes = Recurse(rightVertices, budget, tree1, tree2, vertical)
+    leftRes = Recurse(leftVertices, budget, tree1, tree2, vertical)
     return [
-        newVertices
-        + steinerVertices
-        + Recurse(rightVertices, obstacles, costs, budget, tree1, tree2, vertical)[0]
-        + Recurse(leftVertices, obstacles, costs, budget, tree1, tree2, vertical)[0],
-        newEdges
-        + Recurse(rightVertices, obstacles, costs, budget, tree1, tree2, vertical)[1]
-        + Recurse(leftVertices, obstacles, costs, budget, tree1, tree2, vertical)[1],
+        newVertices + steinerVertices + rightRes[0] + leftRes[0],
+        newEdges + rightRes[1] + leftRes[1],
     ]
 
 
@@ -545,6 +503,8 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
     # (-1). Initialize graph and all points
     graph = Graph()
     vertices = [start] + [goal] + helper.obstacleVertices(obstacles)
+    for vertex in vertices:
+        graph.addVertex(vertex)
 
     # "Rotate the plane"
     rotatedVertices = []
@@ -552,6 +512,7 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
         newX, newY = helper.rotatepoint(vertex[0], vertex[1], angle)
         rotatedVertices.append([newX, newY])
 
+    # For making trees
     rotatedObstacles = []
     for obstacle in obstacles:
         rotatedObstacle = []
@@ -571,27 +532,28 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
 
     # 1. Step add new edges and vertices, vertical
     newVerticesV, newEdgesV = Recurse(
-        vertices, obstacles, costs, budget, verticalTree, horizontalTree, True
+        rotatedVertices,
+        budget,
+        verticalTree,
+        horizontalTree,
+        True,
     )
 
     for vertex in newVerticesV:
         # Rotate the plane back
-        vertex[0], vertex[1] = helper.revertpoint(vertex[0], vertex[1], angle)
+        vertex = helper.revertpoint(vertex[0], vertex[1], angle)
         graph.addVertex(vertex)
 
     for beginning, end, cost, distance in newEdgesV:
         # Rotate the plane back
-        beginning[0], beginning[1] = helper.revertpoint(
-            beginning[0], beginning[1], angle
-        )
-        end[0], end[1] = helper.revertpoint(end[0], end[1], angle)
+        beginning = helper.revertpoint(beginning[0], beginning[1], angle)
+        end = helper.revertpoint(end[0], end[1], angle)
         graph.addEdge(beginning, end, cost, distance)
+        graph.addEdge(end, beginning, cost, distance)
 
     # 2. Step add new edges and vertices, horizontal
     newVerticesH, newEdgesH = Recurse(
-        vertices,
-        obstacles,
-        costs,
+        rotatedVertices,
         budget,
         horizontalTree,
         verticalTree,
@@ -599,15 +561,14 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
     )
 
     for vertex in newVerticesH:
-        vertex[0], vertex[1] = helper.revertpoint(vertex[0], vertex[1], angle)
+        vertex = helper.revertpoint(vertex[0], vertex[1], angle)
         graph.addVertex(vertex)
 
     for beginning, end, cost, distance in newEdgesH:
-        beginning[0], beginning[1] = helper.revertpoint(
-            beginning[0], beginning[1], angle
-        )
-        end[0], end[1] = helper.revertpoint(end[0], end[1], angle)
+        beginning = helper.revertpoint(beginning[0], beginning[1], angle)
+        end = helper.revertpoint(end[0], end[1], angle)
         graph.addEdge(beginning, end, cost, distance)
+        graph.addEdge(end, beginning, cost, distance)
 
     # 3. Add edges between consecutive vertices of obstacles
     for obstacle in obstacles:
@@ -617,6 +578,7 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
                 (i + 1) % len(obstacle)
             ]  # To connect the last point to the first point
             graph.addEdge(u, v, 0, helper.distance(u, v))
+            graph.addEdge(v, u, 0, helper.distance(u, v))
 
     return graph
 
@@ -624,14 +586,12 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
 # calls sparseGraph on rotated planes, then makes a union of graphs
 def rotateUnion(start, goal, obstacles, costs, budget, epsilon):
     numberOfCopies = math.ceil(1 / epsilon)
-    angles = [i * 360 / numberOfCopies - 90 for i in range(numberOfCopies)]
-
+    angles = [i * 360 / numberOfCopies for i in range(1, numberOfCopies)]
     graph = sparseGraph(start, goal, obstacles, costs, budget, 0)
-
     for angle in angles:
-        newGraph = sparseGraph(start, goal, obstacles, costs, budget, angle)
-        graph = graph.union(newGraph, angle)
-
+        if angle % 306 != 0:
+            newGraph = sparseGraph(start, goal, obstacles, costs, budget, angle)
+            graph = graph.union(newGraph, angle)
     return graph
 
 
@@ -661,9 +621,9 @@ def main(problem, epsilon=None):
 
         # Plot the problem, then problem w/ shortest path, then viability graph
         # helper.plotProblem(start, goal, obstacles, budget, costs)
-        # helper.plotPointsAndObstaclesSweep(
-        #     start, goal, obstacles, budget, costs, epsilon, nicePath
-        # )
+        helper.plotPointsAndObstaclesSweep(
+            start, goal, obstacles, budget, costs, epsilon, nicePath
+        )
         # plotGraph(graph, start, goal, obstacles, costs, budget, epsilon)
         print(f"Shortest path from {start} to {goal} is {nicePath}")
         return nicePath
@@ -673,4 +633,4 @@ def main(problem, epsilon=None):
 
 
 if __name__ == "__main__":
-    main(problems.problemError3, 1)  # Non deterministic lol
+    main(problems.problem0, 1 / 4)
