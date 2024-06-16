@@ -35,7 +35,12 @@ h1 {
 /* Select styles */
 #problemSelect {
     padding: 10px;
-    flex: 1;
+    flex: 0.2;
+}
+
+#algorithmSelect {
+    padding: 10px;
+    flex: 0.2;
 }
 
 /* Input container styles */
@@ -53,10 +58,14 @@ h1 {
     font-weight: bold;
 }
 
+
 /* Input styles */
 .input-container input {
     padding: 10px;
-    width: 100%;
+    width: 130px; 
+    font-size: 16px; 
+    height: 40px; 
+    box-sizing: border-box; 
 }
 
 /* Button styles */

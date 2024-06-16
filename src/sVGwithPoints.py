@@ -6,7 +6,6 @@ import numpy as np
 from AVLTree import AVLTree, TreeNode
 
 from dijkstra import dijkstra
-import helper
 
 from problems import problemParameters
 import problems
@@ -34,7 +33,7 @@ class Graph:
         self.vertices.setdefault(start, []).append((end, cost, length))
 
 
-############################## Helper functions but with Point class ############
+############################## Helper functions modified to suit Point class ############
 
 
 def plotPointsAndObstaclesSweep(

@@ -180,7 +180,6 @@ class AVLTree:
         listOfElements = []
         if root:
             listOfElements.append(root.key)
-            # print("{0} ".format(root.key), end="")
             listOfElements += self.preorder(root.left)
             listOfElements += self.preorder(root.right)
         return listOfElements

@@ -10,7 +10,8 @@ from problems import (
     problemError3,
     problemParameters,
 )
-from sweepViabilityGraph import main
+from sweepViabilityGraph import main as sweep
+from sparseGraph import main as sparse
 import time
 import plotly.graph_objects as go
 
@@ -145,6 +146,8 @@ def calculate_shortest_path():
     data = request.json
 
     problem_name = data.get("problem")
+    algorithm = data.get("algorithm", "sweep")
+
     if problem_name not in problems:
         return jsonify({"error": "Invalid problem name"}), 400
 
@@ -166,9 +169,17 @@ def calculate_shortest_path():
         problem.budget = budget
 
     if problem:
+        # Select the appropriate algorithm
+        if algorithm == "sweep":
+            algorithm = sweep
+        elif algorithm == "sparse":
+            algorithm = sparse
+        else:
+            return jsonify({"error": "Invalid algorithm"}), 400
+
         # Calculate the shortest path for the selected problem
         start_time = time.time()
-        result = main(problem, epsilon)
+        result = algorithm(problem, epsilon)
         path = [(x, y) for x, y, _ in result]
         formattedPathString = ", ".join([str(coord) for coord in path])
         end_time = time.time()

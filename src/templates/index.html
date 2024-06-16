@@ -10,18 +10,17 @@
 <body>
     <div class="container">
         <h1>Shortest path with removable obstacles</h1>
-        <!-- <div class="form-container">
-            <select id="problemSelect">
-                <option value="">Select a problem</option>
-            </select>
-            <input type="text" id="epsilonRange" placeholder="Epsilon value" value="1">
-            <input type="text" id="epsilonRange" placeholder="Budget" value="10">
-            <button id="calculateButton">Calculate Shortest Path</button>
-        </div> -->
         <div class="form-container">
             <select id="problemSelect">
                 <option value="">Select a problem</option>
             </select>
+
+            <select id="algorithmSelect">
+                <option value="">Select an algorithm</option>
+                <option value="sweep">Sweep</option>
+                <option value="sparse">Sparse</option>
+            </select>
+
             <div class="input-container">
                 <label for="epsilonRange">Epsilon:</label>
                 <input type="text" id="epsilonRange" placeholder="Epsilon value" value="1">

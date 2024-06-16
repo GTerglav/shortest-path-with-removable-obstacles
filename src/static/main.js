@@ -18,6 +18,7 @@ fetch('/get_problems')
         });
     });
 
+
 // Update the epsilon value displayed dynamically as the slider/input changes
 epsilonRange.addEventListener('input', () => {
     epsilonValue.textContent = epsilonRange.value;
@@ -27,6 +28,7 @@ epsilonRange.addEventListener('input', () => {
 calculateButton.addEventListener('click', () => {
     // Retrieve the selected problem and epsilon value
     const problem = problemSelect.value;
+    const algorithm = algorithmSelect.value;
     const epsilon = epsilonRange.value;
     const budget = budgetInput.value;
 
@@ -36,7 +38,7 @@ calculateButton.addEventListener('click', () => {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ problem, epsilon, budget })
+        body: JSON.stringify({ problem, algorithm, epsilon, budget })
     })
     .then(response => response.json())
     .then(data => {

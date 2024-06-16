@@ -1,20 +1,13 @@
 import math
 import statistics
 import time
-from matplotlib import pyplot as plt
-import numpy as np
-from AVLTree import AVLTree, TreeNode
-from newDijkstra import dijkstra
+from dijkstra import dijkstraForSparseGraph as dijkstra
 import helper
 from problems import problemParameters
 import problems
 from persistentRBTree import persistentRBTree
 import sys
 from functools import cmp_to_key
-
-
-# Viability graph algoritm as before
-# from sweepViabilityGraph import Graph, viableVerticesFromV, viable, viabilityGraph
 
 
 # This graph has dict for neighbors, also i need union of graphs
@@ -659,4 +652,4 @@ def main(problem, epsilon=None):
 
 
 if __name__ == "__main__":
-    main(problems.problemError3, 1 / 5)
+    main(problems.problemError3, 1 / 2)

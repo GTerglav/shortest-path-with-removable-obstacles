@@ -137,10 +137,10 @@ pklProblem200 = problems.loadProblemPickle("problem200.pkl")
 pklProblem400 = problems.loadProblemPickle("problem400.pkl")
 # n = 360, time = 301s Via and 0.31s res
 pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
-# n = 864, time = 4574s 
+# n = 864, time = 4574s
 if __name__ == "__main__":
     startTime2 = time.time()
-    main(pklProblem1000)
+    main(pklProblem200)
     endTime2 = time.time()
     print(f"Execution time {endTime2 - startTime2} seconds")
 

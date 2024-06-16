@@ -3,14 +3,16 @@ import sys
 from matplotlib import pyplot as plt
 import numpy as np
 
-# smalles positive number
+# smallest positive number
 epsilon = sys.float_info.epsilon
 
 
+# euclidean distance
 def distance(p1, p2):
     return math.sqrt(abs(p1[0] - p2[0]) ** 2 + abs(p1[1] - p2[1]) ** 2)
 
 
+# returns angle and distance between v and p. For sorting with sweep algo
 def compareAngle(v, p):
     angle = math.atan2(p[1] - v[1], p[0] - v[0])
     dist = distance(v, p)
@@ -35,7 +37,6 @@ def intersectLine(v, p, start, end):
             return math.inf
     else:
         # Calculate the parameters t and u for the intersection point
-        # t = ((v[0] - start[0]) * b1 - (v[1] - start[1]) * b0) / determinant
         u = ((v[0] - start[0]) * a1 - (v[1] - start[1]) * a0) / determinant
         t = (b1 * (v[0] - start[0]) + b0 * (start[1] - v[1])) / determinant
 
@@ -46,8 +47,9 @@ def intersectLine(v, p, start, end):
             return math.inf
 
 
+# Check if line segment (p1, q1) intersects line segment (p2, q2)
 def intersectSegments(p1, q1, p2, q2):
-    # Check if line segment (p1, q1) intersects line segment (p2, q2)
+    # orientation of points p,q,r
     def orientation(p, q, r):
         val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1])
         if val == 0:
@@ -86,17 +88,16 @@ def intersectSegments(p1, q1, p2, q2):
     return False
 
 
+# Check if point q lies on line segment pr
 def onSegment(p, q, r):
-    # Check if point q lies on line segment pr
     return min(p[0], r[0]) <= q[0] <= max(p[0], r[0]) and min(p[1], r[1]) <= q[
         1
     ] <= max(p[1], r[1])
 
 
+# Check if the line segment between p and q intersects the obstacle
+# Assuming obstacle is a list of vertices representing the obstacle polygon
 def intersect(p, q, obstacle):
-    # Check if the line segment between p and q intersects the obstacle
-    # Assuming obstacle is a list of vertices representing the obstacle polygon
-    # Iterate over each edge of the obstacle
     for i in range(len(obstacle)):
         start = obstacle[i]
         end = obstacle[
@@ -107,7 +108,7 @@ def intersect(p, q, obstacle):
     return False
 
 
-# If segments p1,p2 and p3,p4 intersect
+# Check if segments p1,p2 and p3,p4 intersect
 def intersect2(p1, p2, p3, p4):
     x1, y1 = p1
     x2, y2 = p2
@@ -129,6 +130,7 @@ def intersect2(p1, p2, p3, p4):
     return False
 
 
+# orientation of points
 def ccw(p1, p2, p3):
     if p3 is None:
         return 1
@@ -136,6 +138,7 @@ def ccw(p1, p2, p3):
         return (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0])
 
 
+# are v,w in the same obstacle
 def inSameObstacleSegment(v, w, obstacles, costs):
     for obstacle, cost in zip(obstacles, costs):
         if any(np.array_equal(point, v) for point in obstacle) and any(
@@ -157,6 +160,7 @@ def areNeighboursInObstacle(v, w, obstacle):
     )
 
 
+# Root is tree of obstacle edges
 def costOfSegment(v, w, root, costs):
     if root is None:
         return 0
@@ -254,6 +258,7 @@ def plotPointsAndObstacles(start, goal, obstacles, shortestPath=None):
     plt.show()
 
 
+# For the sweep algorithm, since its slightly different
 def plotPointsAndObstaclesSweep(
     start, goal, obstacles, budget, costs, epsilon, shortestPath=None
 ):
@@ -296,13 +301,8 @@ def plotPointsAndObstaclesSweep(
         fontsize=14,
     )
 
-    # Set aspect ratio and display
-    # plt.gca().set_aspect("equal", adjustable="box")
-    # plt.legend()
     plt.xlabel("X")
     plt.ylabel("Y")
-    # plt.title("Graph with Obstacles")
-    # plt.grid(True)
     plt.show()
 
 
@@ -341,13 +341,8 @@ def plotProblem(start, goal, obstacles, budget, costs):
         fontsize=14,
     )
 
-    # Set aspect ratio and display
-    # plt.gca().set_aspect("equal", adjustable="box")
-    # plt.legend()
     plt.xlabel("X")
     plt.ylabel("Y")
-    # plt.title("Graph with Obstacles")
-    # plt.grid(True)
     plt.show()
 
 
@@ -371,6 +366,7 @@ def edgeOrientiation(edge):
         return u2 < v2
 
 
+# Finds intersecting point of segments A1,A2 and B1,B2
 def intersectionPoint(A1, A2, B1, B2):
     # Extract coordinates
     x1, y1 = A1
@@ -401,6 +397,7 @@ def intersectionPoint(A1, A2, B1, B2):
     return None
 
 
+# Returns list of obstacle vertices
 def obstacleVertices(obstacles):
     vertices = []
     for obstacle in obstacles:
@@ -409,6 +406,8 @@ def obstacleVertices(obstacles):
     return vertices
 
 
+# Input are obstacle edges that intersect a line segment
+# Returns cost of line segment
 def costHelper(edges):
     totalCost = 0
     costDict = {}
@@ -473,6 +472,7 @@ def rotationalEquality(p1, p2, angle):
     return diff < 0.000000001
 
 
+# Second highest element of list
 def secondHighest(arr):
     if len(arr) < 2:
         return None
@@ -485,5 +485,6 @@ def secondHighest(arr):
     return second if second != float("-inf") else None
 
 
+# Returns True if vertices v,u are very close
 def verticesDifferent(v, u):
     return abs(v[0] - u[0]) + abs(v[1] - u[1]) > 0.000000001
