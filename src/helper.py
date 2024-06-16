@@ -449,8 +449,8 @@ def rotatepoint(x, y, alpha):
     return [xNew, yNew]
 
 
-print(rotatepoint(2.1407, -0.27919, 288))
-print(rotatepoint(1.949733922046848, 0.30858725745354826, 288))
+# print(rotatepoint(2.1407, -0.27919, 288))
+# print(rotatepoint(1.949733922046848, 0.30858725745354826, 288))
 
 
 # The other way
