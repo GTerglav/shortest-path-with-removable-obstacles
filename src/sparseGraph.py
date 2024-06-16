@@ -198,7 +198,7 @@ def makeVerticalPersistentTree(obstacles, costs, relation, equality):
             queue.pop(0)
 
         # two neighbors in obstacle
-        neighbors = helper.findObstacleEdges(obstacles, point[0])
+        neighbors = helper.findObstacleEdges(obstacles, point[0], point[2])
         if neighbors:
             for nh in neighbors:
                 # not considering "= case" since the obstacle segments in such cases are not positive or negative
@@ -233,18 +233,19 @@ def makeHorizontalPersistentTree(obstacles, costs, relation, equality):
 
     queue = []  # Queue for delayed insertion
     for point in sortedPoints:
-        while queue != [] and queue[0][2] < point[0][1]:
+        # Time of insertion smaller than current point, since we dont want to go back in time.
+        while queue != [] and queue[0][2] < point[0][0]:
             tree.insert(queue[0][0], queue[0][1], queue[0][2])
             queue.pop(0)
 
-        neighbors = helper.findObstacleEdges(obstacles, point[0])
+        neighbors = helper.findObstacleEdges(obstacles, point[0], point[2])
         if neighbors:
             for nh in neighbors:
                 if nh[0] > point[0][0]:
                     key = [point[0], nh]
                     queue.append(
-                        [key, [point[0], nh, point[1], point[2]], point[0][1] + epsilon]
-                    )
+                        [key, [point[0], nh, point[1], point[2]], point[0][0] + epsilon]
+                    )  # key, value, time
                 elif nh[0] < point[0][0]:
                     key = [nh, point[0]]
                     tree.delete(key, point[0][0])
@@ -255,6 +256,12 @@ def makeHorizontalPersistentTree(obstacles, costs, relation, equality):
 # The cost is wrong in the case that (v,u) passes through two obstacle vertices of same obstacle.
 # Then it wont add the obstacle to cost. Dont know how to solve TODO
 def costFunction(v, u, tree):
+    errorVertex = [1.949733922046848, 0.30858725745354826]
+    rotated = helper.rotatepoint(errorVertex[0], errorVertex[1], 288.0)
+    if helper.rotationalEquality(v, rotated, 288) or helper.rotationalEquality(
+        u, rotated, 288
+    ):
+        print("here")
     # get all edges that intersect (u,v)
     if v[0] == u[0]:  # (u,v) vertical
         lb = [v, [v[0], v[1] + epsilon]]
@@ -265,26 +272,33 @@ def costFunction(v, u, tree):
             edgesMinus = tree.accessRange(lb, hb, v[0] - epsilon)
         else:
             edges = tree.accessRange(hb, lb, v[0])
-            edgesPlus = tree.accessRange(lb, hb, v[0] + epsilon)
-            edgesMinus = tree.accessRange(lb, hb, v[0] - epsilon)
+            edgesPlus = tree.accessRange(hb, lb, v[0] + epsilon)
+            edgesMinus = tree.accessRange(hb, lb, v[0] - epsilon)
     elif v[1] == u[1]:  # (u,v) horiznotal
         lb = [v, [v[0], v[1] + epsilon]]
         hb = [u, [u[0], u[1] + epsilon]]
         if v[0] < u[0]:
             edges = tree.accessRange(lb, hb, v[1])
-            edgesPlus = tree.accessRange(lb, hb, v[0] + epsilon)
-            edgesMinus = tree.accessRange(lb, hb, v[0] - epsilon)
+            edgesPlus = tree.accessRange(lb, hb, v[1] + epsilon)
+            edgesMinus = tree.accessRange(lb, hb, v[1] - epsilon)
 
         else:
             edges = tree.accessRange(hb, lb, v[1])
-            edgesPlus = tree.accessRange(lb, hb, v[0] + epsilon)
-            edgesMinus = tree.accessRange(lb, hb, v[0] - epsilon)
+            edgesPlus = tree.accessRange(hb, lb, v[1] + epsilon)
+            edgesMinus = tree.accessRange(hb, lb, v[1] - epsilon)
 
-    return max(
-        helper.costHelper(edges),
-        helper.costHelper(edgesPlus),
-        helper.costHelper(edgesMinus),
+    return helper.secondHighest(
+        [
+            helper.costHelper(edges),
+            helper.costHelper(edgesPlus),
+            helper.costHelper(edgesMinus),
+        ]
     )
+    # return max(
+    #     helper.costHelper(edges),
+    #     helper.costHelper(edgesPlus),
+    #     helper.costHelper(edgesMinus),
+    # )
 
 
 # Finds first positive or negative slope segment that intersects (v,u).
@@ -374,10 +388,9 @@ def Recurse(vertices, budget, tree1, tree2, vertical=True):
             projectedVertex = [median, vertex[1]]
         else:
             projectedVertex = [vertex[0], median]
-
         cost = costFunction(vertex, projectedVertex, tree1)
         # a) First add the projected vertex to graph
-        if cost <= budget and vertex != projectedVertex:
+        if cost <= budget and helper.verticesDifferent(vertex, projectedVertex):
             # newGraph.addVertex(projectedVertex)
             # newGraph.addEdge(vertex,projectedVertex, cost, helper.distance(vertex,projectedVertex))
             steinerVertices.append(projectedVertex)
@@ -417,14 +430,16 @@ def Recurse(vertices, budget, tree1, tree2, vertical=True):
                         helper.distance(bypass1, bypass2),
                     )
                 )
-                newEdges.append(
-                    (
-                        vertex,
-                        bypass1,
-                        costFunction(vertex, bypass1, tree1),
-                        helper.distance(vertex, bypass1),
+                cost = costFunction(vertex, bypass1, tree1)
+                if cost <= budget:
+                    newEdges.append(
+                        (
+                            vertex,
+                            bypass1,
+                            cost,
+                            helper.distance(vertex, bypass1),
+                        )
                     )
-                )
 
         if negSegment is not None:
             bypass1 = helper.intersectionPoint(
@@ -444,14 +459,16 @@ def Recurse(vertices, budget, tree1, tree2, vertical=True):
                         helper.distance(bypass1, bypass2),
                     )
                 )
-                newEdges.append(
-                    (
-                        vertex,
-                        bypass1,
-                        costFunction(vertex, bypass1, tree1),
-                        helper.distance(vertex, bypass1),
+                cost = costFunction(vertex, bypass1, tree1)
+                if cost <= budget:
+                    newEdges.append(
+                        (
+                            vertex,
+                            bypass1,
+                            cost,
+                            helper.distance(vertex, bypass1),
+                        )
                     )
-                )
 
         # d) Connect adjacent new vertices on the split line
         if vertical:
@@ -465,7 +482,7 @@ def Recurse(vertices, budget, tree1, tree2, vertical=True):
             v = sortedSteinerVertices[i]
             u = sortedSteinerVertices[i + 1]
             cost = costFunction(v, u, tree2)
-            if cost <= budget and u != v:
+            if cost <= budget and helper.verticesDifferent(u, v):
                 newEdges.append(
                     (
                         v,
@@ -531,6 +548,8 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
     )
 
     # 1. Step add new edges and vertices, vertical
+    if angle == 288.0:
+        print("here")
     newVerticesV, newEdgesV = Recurse(
         rotatedVertices,
         budget,
@@ -543,6 +562,9 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
         # Rotate the plane back
         vertex = helper.revertpoint(vertex[0], vertex[1], angle)
         graph.addVertex(vertex)
+
+        if vertex == [1.949733922046848, 0.30858725745354826]:
+            print("here")
 
     for beginning, end, cost, distance in newEdgesV:
         # Rotate the plane back
@@ -563,6 +585,8 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
     for vertex in newVerticesH:
         vertex = helper.revertpoint(vertex[0], vertex[1], angle)
         graph.addVertex(vertex)
+        if vertex == [1.949733922046848, 0.30858725745354826]:
+            print("here")
 
     for beginning, end, cost, distance in newEdgesH:
         beginning = helper.revertpoint(beginning[0], beginning[1], angle)
@@ -610,11 +634,13 @@ def main(problem, epsilon=None):
     endTime = time.time()
     print(f"Viability graph construction time {endTime - startTime} seconds")
 
+    startTime = time.time()
     copiedGraph = createCopiesOfGraph(graph, start, goal, budget, epsilon)
-
     startVertex = (-1, -1, -1)
     targetVertex = (-2, -2, -2)
     shortestPath = dijkstra(copiedGraph, startVertex, targetVertex)
+    endTime = time.time()
+    print(f"Shortest path found in {endTime - startTime} seconds")
 
     if shortestPath:
         nicePath = shortestPath[1:-1]
@@ -633,4 +659,4 @@ def main(problem, epsilon=None):
 
 
 if __name__ == "__main__":
-    main(problems.problemError3, 1 / 2)
+    main(problems.problemError3, 1 / 5)

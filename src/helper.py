@@ -352,13 +352,13 @@ def plotProblem(start, goal, obstacles, budget, costs):
 
 
 # Returns the two neighbors of point in obstacle
-def findObstacleEdges(obstacles, point):
-    for obstacle in obstacles:
-        if point in obstacle:
-            index = obstacle.index(point)
-            prev_index = (index - 1) % len(obstacle)
-            next_index = (index + 1) % len(obstacle)
-            return [obstacle[prev_index], obstacle[next_index]]
+def findObstacleEdges(obstacles, point, obstacleIndex):
+    obstacle = obstacles[obstacleIndex]
+    if point in obstacle:
+        index = obstacle.index(point)
+        prev_index = (index - 1) % len(obstacle)
+        next_index = (index + 1) % len(obstacle)
+        return [obstacle[prev_index], obstacle[next_index]]
     return None
 
 
@@ -449,6 +449,10 @@ def rotatepoint(x, y, alpha):
     return [xNew, yNew]
 
 
+print(rotatepoint(2.1407, -0.27919, 288))
+print(rotatepoint(1.949733922046848, 0.30858725745354826, 288))
+
+
 # The other way
 def revertpoint(xNew, yNew, alpha):
     alphaRad = math.radians(alpha)
@@ -466,7 +470,7 @@ def rotationalEquality(p1, p2, angle):
     newX1, newY1 = rotatepoint(x1, y1, angle)
     newX2, newY2 = revertpoint(newX1, newY1, angle)
     diff = abs(x2 - newX2) + abs(y2 - newY2)
-    return diff < 0.000001
+    return diff < 0.000000001
 
 
 def secondHighest(arr):
@@ -479,3 +483,7 @@ def secondHighest(arr):
         elif first >= number >= second:
             second = number
     return second if second != float("-inf") else None
+
+
+def verticesDifferent(v, u):
+    return abs(v[0] - u[0]) + abs(v[1] - u[1]) > 0.000000001

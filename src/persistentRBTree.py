@@ -193,15 +193,19 @@ class persistentRBTree:
 
         def inorderHelperLR(node):
             # if node is None or node.key > upperBound:
-            if node is None or self.relation(upperBound, node.key):
+            if node is None:
                 return []
             leftChild = self.getLatestChild(node, time, "left")
-            rightChild = self.getLatestChild(node, time, "right")
-            return (
-                getAllChildren(leftChild)
-                + [(node, node.key)]
-                + inorderHelperLR(rightChild)
-            )
+            if self.relation(upperBound, node.key):
+                # If this node's key is too high i still have to check left child
+                return inorderHelperLR(leftChild)
+            else:
+                rightChild = self.getLatestChild(node, time, "right")
+                return (
+                    getAllChildren(leftChild)
+                    + [(node, node.key)]
+                    + inorderHelperLR(rightChild)
+                )
 
         def inorderHelperTR(node):
             # if node is None or node.key > upperBound:
