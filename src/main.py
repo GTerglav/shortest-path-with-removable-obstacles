@@ -12,6 +12,7 @@ from problems import (
 )
 from sweepViabilityGraph import main as sweep
 from sparseGraph import main as sparse
+from viabilityGraph import main as naive
 import time
 import plotly.graph_objects as go
 
@@ -174,6 +175,8 @@ def calculate_shortest_path():
             algorithm = sweep
         elif algorithm == "sparse":
             algorithm = sparse
+        elif algorithm == "naive":
+            algorithm = naive
         else:
             return jsonify({"error": "Invalid algorithm"}), 400
 

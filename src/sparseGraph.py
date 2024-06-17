@@ -640,9 +640,9 @@ def main(problem, epsilon=None):
 
         # Plot the problem, then problem w/ shortest path, then viability graph
         # helper.plotProblem(start, goal, obstacles, budget, costs)
-        helper.plotPointsAndObstaclesSweep(
-            start, goal, obstacles, budget, costs, epsilon, nicePath
-        )
+        # helper.plotPointsAndObstaclesSweep(
+        #     start, goal, obstacles, budget, costs, epsilon, nicePath
+        # )
         # plotGraph(graph, start, goal, obstacles, costs, budget, epsilon)
         print(f"Shortest path from {start} to {goal} is {nicePath}")
         return nicePath
@@ -652,4 +652,4 @@ def main(problem, epsilon=None):
 
 
 if __name__ == "__main__":
-    main(problems.problemError3, 1 / 2)
+    main(problems.problem4, 1 / 2)

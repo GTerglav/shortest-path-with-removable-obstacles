@@ -94,7 +94,12 @@ def convertPathToCoordinates(path, obstacles, start, goal, budget, epsilon):
     for vertex in path:
         if vertex not in [-1, -2]:
             pointsIndex = vertex // numCopies
-            result += (points[pointsIndex],)
+
+            point = points[pointsIndex]
+            newPoint = np.append(
+                point, 1
+            )  # just to have the same format as path of other algorithms
+            result += (newPoint,)
     return tuple(map(tuple, result))
 
 
@@ -126,6 +131,10 @@ def main(problem, epsilon=None):
         )
         # plotPointsAndObstacles(start, goal, obstacles, nicePath)
         print(f"Shortest path from {start} to {goal} is {nicePath}")
+        print(nicePath)
+        return nicePath
+    else:
+        return []
 
     # plotViabilityGraph(start, goal, obstacles, graph, nicePath)
 
@@ -140,7 +149,7 @@ pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 # n = 864, time = 4574s
 if __name__ == "__main__":
     startTime2 = time.time()
-    main(pklProblem200)
+    main(problems.problem1)
     endTime2 = time.time()
     print(f"Execution time {endTime2 - startTime2} seconds")
 
