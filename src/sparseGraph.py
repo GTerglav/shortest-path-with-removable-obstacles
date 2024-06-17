@@ -187,7 +187,9 @@ def makeVerticalPersistentTree(obstacles, costs, relation, equality):
     for point in sortedPoints:
 
         while queue != [] and queue[0][2] < point[0][1]:
-            tree.insert(queue[0][0], queue[0][1], queue[0][2])
+            tree.insert(
+                queue[0][0], queue[0][1], queue[0][2]
+            )  # queue is list of [val,key,time]
             queue.pop(0)
 
         # two neighbors in obstacle
@@ -280,6 +282,7 @@ def costFunction(v, u, tree):
             edgesPlus = tree.accessRange(hb, lb, v[1] + epsilon)
             edgesMinus = tree.accessRange(hb, lb, v[1] - epsilon)
 
+    # Second highest removes most edge cases but still not fully correct
     return helper.secondHighest(
         [
             helper.costHelper(edges),
@@ -287,11 +290,6 @@ def costFunction(v, u, tree):
             helper.costHelper(edgesMinus),
         ]
     )
-    # return max(
-    #     helper.costHelper(edges),
-    #     helper.costHelper(edgesPlus),
-    #     helper.costHelper(edgesMinus),
-    # )
 
 
 # Finds first positive or negative slope segment that intersects (v,u).
@@ -651,5 +649,14 @@ def main(problem, epsilon=None):
         return []
 
 
+pklProblem40 = problems.loadProblemPickle("problem40.pkl")
+# n ~= 40, epsilon = 1/3, time = 8.3 sec
+pklProblem200 = problems.loadProblemPickle("problem200.pkl")
+# n = 180, time =
+pklProblem400 = problems.loadProblemPickle("problem400.pkl")
+# n = 360, time =
+pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
+# n = 864, time =
+
 if __name__ == "__main__":
-    main(problems.problem4, 1 / 2)
+    main(pklProblem400, 1 / 3)

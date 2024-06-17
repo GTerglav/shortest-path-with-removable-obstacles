@@ -57,8 +57,8 @@ class persistentRBTree:
 
     # Returns latest child node in chosen direction at time
     def getLatestChild(self, node, time, direction):  # direction is "right" or "left"
-        # if node is None:
-        #     return None
+        if node is None:
+            return None
         # We separate "None" children and "node" children
         children = [
             pointer[2]
@@ -102,6 +102,13 @@ class persistentRBTree:
         if node is None:
             return lastRight
 
+        # I have an infinite recursion issue that should happen
+        # Probably cause node has itself as child
+        # Maybe issue with insertions, deletions not happening at right times
+        if lastRight:
+            if self.equality(node.key, lastRight.key):
+                return lastRight
+
         # First check correct time should always be true though
         if node.timeCreated <= time < node.timeDeleted:
 
@@ -133,6 +140,11 @@ class persistentRBTree:
     def leftAccess(self, node, key, time, lastLeft):
         if node is None:
             return lastLeft
+
+        # I have an infinite recursion issue that should happen
+        if lastLeft:
+            if self.equality(node.key, lastLeft.key):
+                return lastLeft
 
         # First check correct time should always be true though
         if node.timeCreated <= time < node.timeDeleted:
@@ -686,7 +698,10 @@ class persistentRBTree:
                         sibling = self.getLatestChild(parent, time, "right")
                     sibling.colors[time] = self.getCurrentColor(parent, time)
                     parent.colors[time] = "black"
-                    self.getLatestChild(sibling, time, "right").colors[time] = "black"
+                    if self.getLatestChild(sibling, time, "right"):
+                        self.getLatestChild(sibling, time, "right").colors[
+                            time
+                        ] = "black"
                     self.leftRotate(parent, time)
                     node = self.getCurrentRoot(time)
             else:
@@ -722,9 +737,13 @@ class persistentRBTree:
                         sibling.colors[time] = "red"
                         self.leftRotate(sibling, time)
                         sibling = self.getLatestChild(parent, time, "left")
-                    sibling.colors[time] = self.getCurrentColor(parent, time)
+                    if sibling:
+                        sibling.colors[time] = self.getCurrentColor(parent, time)
                     parent.colors[time] = "black"
-                    self.getLatestChild(sibling, time, "left").colors[time] = "black"
+                    if self.getLatestChild(sibling, time, "left"):
+                        self.getLatestChild(sibling, time, "left").colors[
+                            time
+                        ] = "black"
                     self.rightRotate(parent, time)
                     node = self.getCurrentRoot(time)
         if node:

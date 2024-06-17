@@ -1,12 +1,9 @@
 import math
 import time
-
 from matplotlib import pyplot as plt
 import numpy as np
 from AVLTree import AVLTree
-
 from dijkstra import dijkstra
-
 from problems import problemParameters
 import problems
 
@@ -444,7 +441,7 @@ pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 
 if __name__ == "__main__":
     startTime = time.time()
-    main(pklProblem40)
+    main(pklProblem1000)
     endTime = time.time()
     print(f"Execution time {endTime - startTime} seconds")
 
