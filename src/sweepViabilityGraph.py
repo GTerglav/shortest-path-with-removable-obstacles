@@ -435,9 +435,10 @@ pklProblem200 = problems.loadProblemPickle("problem200.pkl")
 pklProblem400 = problems.loadProblemPickle("problem400.pkl")
 # n = 360, time = 393s
 pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
-# n = 864, time = 6666s ~= (864/360)^3 * 480 = 6200
+# n = 864, time = 5302s = 1h 28min
 # All of the running time is just for the construction of viability graph
 
+# Still n^3 just shorter now
 
 if __name__ == "__main__":
     startTime = time.time()

@@ -251,12 +251,6 @@ def makeHorizontalPersistentTree(obstacles, costs, relation, equality):
 # The cost is wrong in the case that (v,u) passes through two obstacle vertices of same obstacle.
 # Then it wont add the obstacle to cost. Dont know how to solve TODO
 def costFunction(v, u, tree):
-    errorVertex = [1.949733922046848, 0.30858725745354826]
-    rotated = helper.rotatepoint(errorVertex[0], errorVertex[1], 288.0)
-    if helper.rotationalEquality(v, rotated, 288) or helper.rotationalEquality(
-        u, rotated, 288
-    ):
-        print("here")
     # get all edges that intersect (u,v)
     if v[0] == u[0]:  # (u,v) vertical
         lb = [v, [v[0], v[1] + epsilon]]
@@ -283,13 +277,15 @@ def costFunction(v, u, tree):
             edgesMinus = tree.accessRange(hb, lb, v[1] - epsilon)
 
     # Second highest removes most edge cases but still not fully correct
-    return helper.secondHighest(
+    finalCost = helper.secondHighest(
         [
             helper.costHelper(edges),
             helper.costHelper(edgesPlus),
             helper.costHelper(edgesMinus),
         ]
     )
+
+    return finalCost
 
 
 # Finds first positive or negative slope segment that intersects (v,u).
@@ -539,8 +535,6 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
     )
 
     # 1. Step add new edges and vertices, vertical
-    if angle == 288.0:
-        print("here")
     newVerticesV, newEdgesV = Recurse(
         rotatedVertices,
         budget,
@@ -553,9 +547,6 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
         # Rotate the plane back
         vertex = helper.revertpoint(vertex[0], vertex[1], angle)
         graph.addVertex(vertex)
-
-        if vertex == [1.949733922046848, 0.30858725745354826]:
-            print("here")
 
     for beginning, end, cost, distance in newEdgesV:
         # Rotate the plane back
@@ -576,8 +567,6 @@ def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
     for vertex in newVerticesH:
         vertex = helper.revertpoint(vertex[0], vertex[1], angle)
         graph.addVertex(vertex)
-        if vertex == [1.949733922046848, 0.30858725745354826]:
-            print("here")
 
     for beginning, end, cost, distance in newEdgesH:
         beginning = helper.revertpoint(beginning[0], beginning[1], angle)
@@ -604,7 +593,7 @@ def rotateUnion(start, goal, obstacles, costs, budget, epsilon):
     angles = [i * 360 / numberOfCopies for i in range(1, numberOfCopies)]
     graph = sparseGraph(start, goal, obstacles, costs, budget, 0)
     for angle in angles:
-        if angle % 306 != 0:
+        if angle % 360 != 0:
             newGraph = sparseGraph(start, goal, obstacles, costs, budget, angle)
             graph = graph.union(newGraph, angle)
     return graph
@@ -638,10 +627,11 @@ def main(problem, epsilon=None):
 
         # Plot the problem, then problem w/ shortest path, then viability graph
         # helper.plotProblem(start, goal, obstacles, budget, costs)
-        # helper.plotPointsAndObstaclesSweep(
-        #     start, goal, obstacles, budget, costs, epsilon, nicePath
-        # )
-        # plotGraph(graph, start, goal, obstacles, costs, budget, epsilon)
+        # helper.plotSparseGraph(graph, start, goal, obstacles, costs, budget, epsilon)
+        helper.plotPointsAndObstaclesSweep(
+            start, goal, obstacles, budget, costs, epsilon, nicePath
+        )
+
         print(f"Shortest path from {start} to {goal} is {nicePath}")
         return nicePath
     else:
@@ -659,4 +649,14 @@ pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 # n = 864, time =
 
 if __name__ == "__main__":
-    main(pklProblem400, 1 / 3)
+    main(pklProblem200, 1 / 5)
+
+    # ##### Code for measuring time for different epsilons #########
+    # epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
+    # # times = [_,0.01s, 0.03s, 0.5s, 31s, 4651s ]
+    # # res izgleda kot O((1/e)^2)
+    # for epsilon in epsilons:
+    #     startTime = time.time()
+    #     main(problems.problemError3, epsilon)
+    #     endTime = time.time()
+    #     print(f"Epsilon {epsilon}: Execution time {endTime - startTime} seconds")

@@ -11,8 +11,8 @@ from problems import (
     problemParameters,
 )
 from sweepViabilityGraph import main as sweep
-from sparseGraph import main as sparse
-from viabilityGraph import main as naive
+from sparseViabilityGraph import main as sparse
+from naiveViabilityGraph import main as naive
 import time
 import plotly.graph_objects as go
 
@@ -121,7 +121,7 @@ def plotPointsAndObstacles(
     fig.update_layout(
         xaxis=dict(title="X"),
         yaxis=dict(title="Y"),
-        title="Graph with Obstacles",
+        # title="Graph with Obstacles",
         showlegend=True,
         hovermode="closest",
         plot_bgcolor="white",

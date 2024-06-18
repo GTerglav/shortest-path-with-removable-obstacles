@@ -131,6 +131,7 @@ def intersect2(p1, p2, p3, p4):
 
 
 # orientation of points
+# Returns -1 if clockwise and 1 if counterclockwise
 def ccw(p1, p2, p3):
     if p3 is None:
         return 1
@@ -226,6 +227,59 @@ def plotViabilityGraph(start, goal, obstacles, graph, shortestPath=None):
 
     # Set aspect ratio and display
     plt.gca().set_aspect("equal", adjustable="box")
+    plt.show()
+
+
+# Plots the viablity graph
+def plotSparseGraph(graph, start, goal, obstacles, costs, budget, epsilon):
+    # Plot edges
+    for vertex, edges in graph.vertices.items():
+        for endVertex, (cost, length) in edges.items():
+            startPoint = np.array(vertex)
+            endPoint = np.array(endVertex)
+            plt.plot(
+                [startPoint[0], endPoint[0]],
+                [startPoint[1], endPoint[1]],
+                "b-",
+                linewidth=0.1,
+            )
+
+    # Plot obstacles and their costs
+    for i, obstacle in enumerate(obstacles):
+        xCoords = [point[0] for point in obstacle]
+        yCoords = [point[1] for point in obstacle]
+        plt.fill(xCoords, yCoords, "gray", alpha=0.5)
+        for vertex in obstacle:
+            plt.plot(vertex[0], vertex[1], "ko")  # Plot obstacle vertices
+        # Compute centroid of the obstacle for placing the cost text
+        centroid_x = np.mean(xCoords)
+        centroid_y = np.mean(yCoords)
+        plt.text(
+            centroid_x,
+            centroid_y,
+            f"{costs[i]}",
+            color="black",
+            fontsize=13,
+            ha="center",
+        )
+
+    # Plot start and end vertices
+    plt.scatter(start[0], start[1], color="green", label="Start")
+    plt.scatter(goal[0], goal[1], color="red", label="Goal")
+
+    # Display budget and epsilon values above the graph
+    plt.text(
+        0.5,
+        1.05,
+        f"Budget: {budget}, Epsilon: {epsilon}",
+        transform=plt.gca().transAxes,
+        ha="center",
+        fontsize=14,
+    )
+
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.legend()
     plt.show()
 
 
@@ -377,7 +431,7 @@ def intersectionPoint(A1, A2, B1, B2):
     # Compute determinants
     denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
 
-    if denom == 0:
+    if abs(denom) < 1e-5:
         # Lines are parallel or coincident
         return None
 
@@ -448,8 +502,8 @@ def rotatepoint(x, y, alpha):
     return [xNew, yNew]
 
 
-# print(rotatepoint(2.1407, -0.27919, 288))
-# print(rotatepoint(1.949733922046848, 0.30858725745354826, 288))
+# print(rotatepoint(2.1407169276719, 0.2791979948389247, 72))
+# print(rotatepoint(1.9497339220468473, -0.3085872574535484, 72))
 
 
 # The other way

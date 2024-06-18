@@ -30,9 +30,14 @@ class persistentRBTree:
 
     # Returns oldes root of current tree that was created before time
     def getCurrentRoot(self, time):
-        eligibleColors = [[t, root] for t, root in self.roots.items() if t <= time]
-        eligibleColors.sort(key=lambda x: x[0], reverse=True)
-        return eligibleColors[0][1]
+        eligibleRoots = [[t, root] for t, root in self.roots.items() if t <= time]
+        eligibleRoots.sort(key=lambda x: x[0], reverse=True)
+        root = eligibleRoots[0][1]
+        # Have issue where root is its own parent IDK HOW TODO
+        if root:
+            if self.getCurrentParent(root, time) == root:
+                root.parents[time] = None
+        return root
 
     # Returns color of node at time or 0 if its none
     def getCurrentColor(self, node, time):
@@ -141,7 +146,7 @@ class persistentRBTree:
         if node is None:
             return lastLeft
 
-        # I have an infinite recursion issue that should happen
+        # I have an infinite recursion issue that shouldn't happen
         if lastLeft:
             if self.equality(node.key, lastLeft.key):
                 return lastLeft
@@ -190,6 +195,8 @@ class persistentRBTree:
 
         # We repeat until we meet a node with key higher than upper bound
 
+        # Wrong!!! Also if we go to left parent and can still go to its right parent and it might be in range.
+
         def getAllChildren(node):
             if node is None:
                 return []
@@ -219,6 +226,25 @@ class persistentRBTree:
                     + inorderHelperLR(rightChild)
                 )
 
+        # here we went from node to its Left parent.
+        # Only node that can be in our range is a right parent.
+        # Now we must finda right parent and perform TR or we dont find one and reutrn 0.
+        def inorderHelperLeftParent(node):
+            if node is None or self.relation(upperBound, node.key):
+                return []
+            parent = self.getCurrentParent(node, time)
+
+            if parent is None:
+                return []
+
+            # Found right parent
+            if parent and self.relation(node.key, parent.key):
+                return inorderHelperTR(parent)
+
+            # If again left parent
+            elif parent and self.relation(parent.key, node.key):
+                return inorderHelperLeftParent(parent)
+
         def inorderHelperTR(node):
             # if node is None or node.key > upperBound:
             if node is None or self.relation(upperBound, node.key):
@@ -241,6 +267,14 @@ class persistentRBTree:
                     + [(node, node.key)]
                     + inorderHelperTR(parent)
                 )
+            # Go to left parent and right child
+            elif parent and self.relation(parent.key, node.key):
+                return (
+                    inorderHelperLR(rightChild)
+                    + [(node, node.key)]
+                    + inorderHelperLeftParent(parent)
+                )
+            # No parent only right child
             else:
                 return inorderHelperLR(rightChild) + [(node, node.key)]
 
@@ -275,7 +309,10 @@ class persistentRBTree:
             return lastNode
 
     # Adds pointer to node at time. Returns list of nodes that got copied during execution
+    # TODO at 162.11556642258086 pointer gets added to node itself there is some Keyerror idk
     def addPointer(self, pointer, node, time):
+        if time == 162.11556642258086:
+            print("OHNO")
         copiedNodes = []
 
         # node has free pointers
@@ -702,6 +739,7 @@ class persistentRBTree:
                         self.getLatestChild(sibling, time, "right").colors[
                             time
                         ] = "black"
+                    # self.getLatestChild(sibling, time, "right").colors[time] = "black"
                     self.leftRotate(parent, time)
                     node = self.getCurrentRoot(time)
             else:
@@ -739,11 +777,13 @@ class persistentRBTree:
                         sibling = self.getLatestChild(parent, time, "left")
                     if sibling:
                         sibling.colors[time] = self.getCurrentColor(parent, time)
+                    # sibling.colors[time] = self.getCurrentColor(parent, time)
                     parent.colors[time] = "black"
                     if self.getLatestChild(sibling, time, "left"):
                         self.getLatestChild(sibling, time, "left").colors[
                             time
                         ] = "black"
+                    # self.getLatestChild(sibling, time, "left").colors[time] = "black"
                     self.rightRotate(parent, time)
                     node = self.getCurrentRoot(time)
         if node:
