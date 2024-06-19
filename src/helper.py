@@ -496,8 +496,8 @@ def rotatepoint(x, y, alpha):
     sinAlpha = math.sin(alphaRad)
 
     # New coordinates
-    xNew = x * cosAlpha + y * sinAlpha
-    yNew = -x * sinAlpha + y * cosAlpha
+    xNew = x * cosAlpha - y * sinAlpha
+    yNew = x * sinAlpha + y * cosAlpha
 
     return [xNew, yNew]
 
@@ -511,8 +511,8 @@ def revertpoint(xNew, yNew, alpha):
     alphaRad = math.radians(alpha)
     cosAlpha = math.cos(alphaRad)
     sinAlpha = math.sin(alphaRad)
-    x = xNew * cosAlpha - yNew * sinAlpha
-    y = xNew * sinAlpha + yNew * cosAlpha
+    x = xNew * cosAlpha + yNew * sinAlpha
+    y = -xNew * sinAlpha + yNew * cosAlpha
 
     return [x, y]
 

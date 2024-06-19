@@ -33,7 +33,6 @@ class persistentRBTree:
         eligibleRoots = [[t, root] for t, root in self.roots.items() if t <= time]
         eligibleRoots.sort(key=lambda x: x[0], reverse=True)
         root = eligibleRoots[0][1]
-        # Have issue where root is its own parent IDK HOW TODO
         if root:
             if self.getCurrentParent(root, time) == root:
                 root.parents[time] = None
@@ -179,6 +178,8 @@ class persistentRBTree:
 
     # Returns all items with lB <= key uB at time
     def accessRange(self, lowerBound, upperBound, time):
+        if time == 2.1678642540648934:
+            print(2)
         root = self.getCurrentRoot(time)
 
         # Find the node with smallest key that is greater or equal to lower bound
@@ -244,6 +245,9 @@ class persistentRBTree:
             # If again left parent
             elif parent and self.relation(parent.key, node.key):
                 return inorderHelperLeftParent(parent)
+            # Node has same key as parent shouldnt happen
+            else:
+                return []
 
         def inorderHelperTR(node):
             # if node is None or node.key > upperBound:
@@ -280,6 +284,36 @@ class persistentRBTree:
 
         return inorderHelperTR(lowestNode)
 
+    # similar to access but returns node only if key is equal
+    def findNodeToDelete(self, node, key, time):
+        if node is None:
+            return None
+
+        # First check correct time should always be true though
+        if node.timeCreated <= time < node.timeDeleted:
+
+            # found
+            # if node.key == key:
+            if self.equality(node.key, key):
+                return node
+
+            # go right
+            # if node.key < key:
+            elif self.relation(node.key, key):
+                return self.findNodeToDelete(
+                    self.getLatestChild(node, time, "right"), key, time
+                )
+
+            # go left
+            # if node.key > key:
+            else:
+                return self.findNodeToDelete(
+                    self.getLatestChild(node, time, "left"), key, time
+                )
+        else:
+            print("Access error: wrong time")
+            return None
+
     # Similar to access, instead returns the last real node instead of last right.
     # Finds parent for insertion
     def findParent(self, node, key, time, lastNode):
@@ -309,10 +343,7 @@ class persistentRBTree:
             return lastNode
 
     # Adds pointer to node at time. Returns list of nodes that got copied during execution
-    # TODO at 162.11556642258086 pointer gets added to node itself there is some Keyerror idk
     def addPointer(self, pointer, node, time):
-        if time == 162.11556642258086:
-            print("OHNO")
         copiedNodes = []
 
         # node has free pointers
@@ -625,8 +656,10 @@ class persistentRBTree:
         root = self.getCurrentRoot(time)
         root.colors[time] = "black"
 
-    ## CHATGPT DELETE  implementation ###
+    ## mainly-CHATGPT delete  implementation
 
+    # v child of u
+    # connects v and parent of u (parent gets pointer t v, v gets parent parent)
     def transplant(self, u, v, time):
         parent = self.getCurrentParent(u, time)
         if parent is None:
@@ -636,13 +669,13 @@ class persistentRBTree:
                 "left" if u == self.getLatestChild(parent, time, "left") else "right"
             )
             self.addPointer([time, direction, v], parent, time)
-        if v is not None:
+        if v is not None and v != parent:
             v.parents[time] = parent
 
     # Deletes node with largest key <= given key at time
     def delete(self, key, time):
         root = self.getCurrentRoot(time)
-        nodeToDelete = self.access(root, key, time, None)
+        nodeToDelete = self.findNodeToDelete(root, key, time)
         if nodeToDelete is None:
             return  # Node not found
 
@@ -655,28 +688,39 @@ class persistentRBTree:
             child = self.getLatestChild(nodeToDelete, time, "left")
             self.transplant(nodeToDelete, child, time)
         else:
+            # Inorder succesor. Min element of right subtree
             successor = self.minimum(
                 self.getLatestChild(nodeToDelete, time, "right"), time
             )
             original_color = self.getCurrentColor(successor, time)
             child = self.getLatestChild(successor, time, "right")
             if self.getCurrentParent(successor, time) == nodeToDelete:
-                if child is not None:
-                    child.parents[time] = successor
+                pass
+                # if child is not None:
+                #     child.parents[time] = (
+                #         successor  # This is useless the parent is already successor by def??
+                #     )
             else:
                 self.transplant(successor, child, time)
-                successor.pointers.append(
-                    [time, "right", self.getLatestChild(nodeToDelete, time, "right")]
+                # Right child of node to delete
+                rc = self.getLatestChild(nodeToDelete, time, "right")
+                self.addPointer(
+                    [time, "right", rc],
+                    successor,
+                    time,
                 )
-                if self.getLatestChild(nodeToDelete, time, "right") is not None:
+                if rc is not None and rc != successor:
                     self.getLatestChild(nodeToDelete, time, "right").parents[
                         time
                     ] = successor
             self.transplant(nodeToDelete, successor, time)
-            successor.pointers.append(
-                [time, "left", self.getLatestChild(nodeToDelete, time, "left")]
+            lc = self.getLatestChild(nodeToDelete, time, "left")
+            self.addPointer(
+                [time, "left", lc],
+                successor,
+                time,
             )
-            if self.getLatestChild(nodeToDelete, time, "left") is not None:
+            if lc is not None and lc != successor:
                 self.getLatestChild(nodeToDelete, time, "left").parents[
                     time
                 ] = successor
@@ -733,13 +777,13 @@ class persistentRBTree:
                         sibling.colors[time] = "red"
                         self.rightRotate(sibling, time)
                         sibling = self.getLatestChild(parent, time, "right")
-                    sibling.colors[time] = self.getCurrentColor(parent, time)
+                    if sibling:
+                        sibling.colors[time] = self.getCurrentColor(parent, time)
                     parent.colors[time] = "black"
                     if self.getLatestChild(sibling, time, "right"):
                         self.getLatestChild(sibling, time, "right").colors[
                             time
                         ] = "black"
-                    # self.getLatestChild(sibling, time, "right").colors[time] = "black"
                     self.leftRotate(parent, time)
                     node = self.getCurrentRoot(time)
             else:
@@ -769,26 +813,25 @@ class persistentRBTree:
                         )
                         == "black"
                     ):
-                        self.getLatestChild(sibling, time, "right").colors[
-                            time
-                        ] = "black"
+                        nephew = self.getLatestChild(sibling, time, "right")
+                        if nephew:
+                            nephew.colors[time] = "black"
                         sibling.colors[time] = "red"
                         self.leftRotate(sibling, time)
                         sibling = self.getLatestChild(parent, time, "left")
                     if sibling:
                         sibling.colors[time] = self.getCurrentColor(parent, time)
-                    # sibling.colors[time] = self.getCurrentColor(parent, time)
                     parent.colors[time] = "black"
                     if self.getLatestChild(sibling, time, "left"):
                         self.getLatestChild(sibling, time, "left").colors[
                             time
                         ] = "black"
-                    # self.getLatestChild(sibling, time, "left").colors[time] = "black"
                     self.rightRotate(parent, time)
                     node = self.getCurrentRoot(time)
         if node:
             node.colors[time] = "black"
 
+    # Function for printing trees
     def inorderTraversal(self, time):
         def inorderHelper(node):
             if node is None:

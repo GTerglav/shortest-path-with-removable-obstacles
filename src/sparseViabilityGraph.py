@@ -186,11 +186,22 @@ def makeVerticalPersistentTree(obstacles, costs, relation, equality):
     queue = []
     for point in sortedPoints:
 
+        # if point[0][1] == 2.8:
+        #     print("time")
+
         while queue != [] and queue[0][2] < point[0][1]:
             tree.insert(
                 queue[0][0], queue[0][1], queue[0][2]
             )  # queue is list of [val,key,time]
             queue.pop(0)
+
+        # root = tree.getCurrentRoot(point[0][1])
+        # node = tree.findNodeToDelete(root, [[-1.0, 0.1], [-2.0, 10.0]], point[0][1])
+        # if node:
+        #     print(f"We are all good in{point[0][1]}")
+        # else:
+        #     print(f"We lost it in{point[0][1]}")
+        # Lost it in 2.8
 
         # two neighbors in obstacle
         neighbors = helper.findObstacleEdges(obstacles, point[0], point[2])
@@ -201,10 +212,14 @@ def makeVerticalPersistentTree(obstacles, costs, relation, equality):
                 if nh[1] > point[0][1]:
                     key = [point[0], nh]  # keys are endpoints of segment
                     # if nh[0] != point[0][0]: # Actually I dont want to ignore vertical for cost computing
-                    # val is 1st vertex of edge, 2nd, cost of obstacle of edge, index of obstacle
+                    # val is [1st vertex of edge, 2nd, cost of obstacle of edge, index of obstacle]
                     # add insertions to queue, because they happend at time+epsilon
                     queue.append(
-                        [key, [point[0], nh, point[1], point[2]], point[0][1] + epsilon]
+                        [
+                            key,
+                            [point[0], nh, point[1], point[2]],
+                            point[0][1] + 2 * epsilon,
+                        ]
                     )
                 # delete
                 elif nh[1] < point[0][1]:
@@ -239,7 +254,11 @@ def makeHorizontalPersistentTree(obstacles, costs, relation, equality):
                 if nh[0] > point[0][0]:
                     key = [point[0], nh]
                     queue.append(
-                        [key, [point[0], nh, point[1], point[2]], point[0][0] + epsilon]
+                        [
+                            key,
+                            [point[0], nh, point[1], point[2]],
+                            point[0][0] + 2 * epsilon,
+                        ]
                     )  # key, value, time
                 elif nh[0] < point[0][0]:
                     key = [nh, point[0]]
@@ -251,10 +270,14 @@ def makeHorizontalPersistentTree(obstacles, costs, relation, equality):
 # The cost is wrong in the case that (v,u) passes through two obstacle vertices of same obstacle.
 # Then it wont add the obstacle to cost. Dont know how to solve TODO
 def costFunction(v, u, tree):
+    if not helper.verticesDifferent(v, [-10, 2.9]) or not helper.verticesDifferent(
+        u, [-10, 2.9]
+    ):
+        print("h")
     # get all edges that intersect (u,v)
     if v[0] == u[0]:  # (u,v) vertical
-        lb = [v, [v[0], v[1] + epsilon]]
-        hb = [u, [u[0], u[1] + epsilon]]
+        lb = [v, [v[0], v[1] + 2 * epsilon]]
+        hb = [u, [u[0], u[1] + 2 * epsilon]]
         if v[1] < u[1]:
             edges = tree.accessRange(lb, hb, v[0])
             edgesPlus = tree.accessRange(lb, hb, v[0] + epsilon)
@@ -264,17 +287,16 @@ def costFunction(v, u, tree):
             edgesPlus = tree.accessRange(hb, lb, v[0] + epsilon)
             edgesMinus = tree.accessRange(hb, lb, v[0] - epsilon)
     elif v[1] == u[1]:  # (u,v) horiznotal
-        lb = [v, [v[0], v[1] + epsilon]]
-        hb = [u, [u[0], u[1] + epsilon]]
+        lb = [v, [v[0], v[1] + 2 * epsilon]]
+        hb = [u, [u[0], u[1] + 2 * epsilon]]
         if v[0] < u[0]:
             edges = tree.accessRange(lb, hb, v[1])
-            edgesPlus = tree.accessRange(lb, hb, v[1] + epsilon)
-            edgesMinus = tree.accessRange(lb, hb, v[1] - epsilon)
-
+            edgesPlus = tree.accessRange(lb, hb, v[1] + 2 * epsilon)
+            edgesMinus = tree.accessRange(lb, hb, v[1] - 2 * epsilon)
         else:
             edges = tree.accessRange(hb, lb, v[1])
-            edgesPlus = tree.accessRange(hb, lb, v[1] + epsilon)
-            edgesMinus = tree.accessRange(hb, lb, v[1] - epsilon)
+            edgesPlus = tree.accessRange(hb, lb, v[1] + 2 * epsilon)
+            edgesMinus = tree.accessRange(hb, lb, v[1] - 2 * epsilon)
 
     # Second highest removes most edge cases but still not fully correct
     finalCost = helper.secondHighest(
@@ -407,6 +429,9 @@ def Recurse(vertices, budget, tree1, tree2, vertical=True):
                 posSegment[0][0], posSegment[0][1], splitLine[0], splitLine[1]
             )
             if bypass2:
+                # Lift Points slightly above obstacle:
+                bypass1[1] += 3 * epsilon
+                bypass2[1] += 3 * epsilon
                 newVertices.append(bypass1)
                 steinerVertices.append(bypass2)
                 newEdges.append(
@@ -436,6 +461,9 @@ def Recurse(vertices, budget, tree1, tree2, vertical=True):
                 negSegment[0][0], negSegment[0][1], splitLine[0], splitLine[1]
             )
             if bypass2:
+                # Lower Points slightly below obstacle:
+                bypass1[1] -= 3 * epsilon
+                bypass2[1] -= 3 * epsilon
                 newVertices.append(bypass1)
                 steinerVertices.append(bypass2)
                 newEdges.append(
@@ -502,7 +530,7 @@ def Recurse(vertices, budget, tree1, tree2, vertical=True):
     ]
 
 
-# TODO
+# Returns sparse viability graph H from paper
 def sparseGraph(start, goal, obstacles, costs, budget, angle=0):
     # (-1). Initialize graph and all points
     graph = Graph()
@@ -627,7 +655,7 @@ def main(problem, epsilon=None):
 
         # Plot the problem, then problem w/ shortest path, then viability graph
         # helper.plotProblem(start, goal, obstacles, budget, costs)
-        # helper.plotSparseGraph(graph, start, goal, obstacles, costs, budget, epsilon)
+        helper.plotSparseGraph(graph, start, goal, obstacles, costs, budget, epsilon)
         helper.plotPointsAndObstaclesSweep(
             start, goal, obstacles, budget, costs, epsilon, nicePath
         )
@@ -639,17 +667,20 @@ def main(problem, epsilon=None):
         return []
 
 
+# problem1, n = 15, epsilon = 1/5, time = 0.37
+
 pklProblem40 = problems.loadProblemPickle("problem40.pkl")
-# n ~= 40, epsilon = 1/3, time = 8.3 sec
+# n ~= 40, epsilon = 1/5, time = 24 sec
+#        , epsilon = 1/10, time = 74s
 pklProblem200 = problems.loadProblemPickle("problem200.pkl")
-# n = 180, time =
+# n = 180, epsilon = 1/5, time = 905sec
 pklProblem400 = problems.loadProblemPickle("problem400.pkl")
 # n = 360, time =
 pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 # n = 864, time =
 
 if __name__ == "__main__":
-    main(pklProblem200, 1 / 5)
+    main(problems.problem4, 1 / 5)
 
     # ##### Code for measuring time for different epsilons #########
     # epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
