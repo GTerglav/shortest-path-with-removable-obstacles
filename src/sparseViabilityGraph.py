@@ -672,6 +672,8 @@ def main(problem, epsilon=None):
 pklProblem40 = problems.loadProblemPickle("problem40.pkl")
 # n ~= 40, epsilon = 1/5, time = 24 sec
 #        , epsilon = 1/10, time = 74s
+pklProblem100 = problems.loadProblemPickle("problem100.pkl")
+# n ~= 90, epsilon = 1/5, time =
 pklProblem200 = problems.loadProblemPickle("problem200.pkl")
 # n = 180, epsilon = 1/5, time = 905sec
 pklProblem400 = problems.loadProblemPickle("problem400.pkl")
@@ -680,7 +682,7 @@ pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 # n = 864, time =
 
 if __name__ == "__main__":
-    main(problems.problem4, 1 / 5)
+    main(pklProblem100, 1 / 5)
 
     # ##### Code for measuring time for different epsilons #########
     # epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]

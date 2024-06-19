@@ -299,7 +299,7 @@ def loadProblemPickle(filename):
 # pklProblem1 = loadProblemPickle("problem40.pkl")  # n ~= 40
 # pklProblem2 = loadProblemPickle("problem200.pkl")  # n ~= 200
 
-# generateProblemPkl("problem1000.pkl", 250, 3, 5, 1000, 40, 5, 1)
+# generateProblemPkl("problem100.pkl", 25, 3, 5, 100, 10, 5, 1)
 
 
 # plotPointsAndObstacles(problemRandom.start, problemRandom.goal, problemRandom.obstacles)

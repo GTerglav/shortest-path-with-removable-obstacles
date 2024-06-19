@@ -71,6 +71,15 @@
 \end{frame}
 
 \begin{frame}
+    \frametitle{Rešitev}
+    Napaka algoritma je $1+2\epsilon$ v ceni.
+
+    \includegraphics[width=1\textwidth]{errorProblem1.png}
+
+\end{frame}
+
+
+\begin{frame}
     \frametitle{Naivni algoritem}
     Za vsak par točk $v,u$ in vsak rob ovire $e$, pogledam,če $\overline{vu}$ seka $e$. Če ja, dodam ceno ovire $e$ k ceni $\overline{vu}$. V graf dodam vse daljice s ceno manj od budgeta.
     \pause
@@ -126,9 +135,13 @@
     \frametitle{Sweep algoritem}
     
     Za vsako točko $v$, ostale točke uredim glede na kot z vodoravno premico in jih nato pregledam po vrsti. Robove ovir shranjujem v AVL drevo.
+
     \pause
-    \includegraphics[width=0.5\textwidth]{sweep.png}
+
+    \includegraphics[width=0.4\textwidth]{sweep.png}
+
     \pause
+
     Časovna zahtevnost $O(n^3)$. Zahtevnost celotnega algoritma je potem  $O(n^3/\epsilon)$
 
     
@@ -198,8 +211,54 @@
 
 \begin{frame}
     \frametitle{Sparse algoritem}
-    
 
+    Za algoritem je treba določiti samo cene navpičnih in vodoravnih poti. Rešitev: persistent search tree.
+
+    \includegraphics[width=0.7\textwidth]{slabs.png}
+    
+\end{frame}
+
+\begin{frame}
+    \frametitle{Sparse algoritem}
+
+    \includegraphics[width=1\textwidth]{psTree.png}
+
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Sparse algoritem}
+
+    Časpvna zahtevnost bi morala biti $O(\frac{nh}{\epsilon^2} \log n \log \frac{n}{\epsilon})$.
+
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|c|}
+            \hline
+            & \multicolumn{5}{c|}{$\epsilon$} \\
+            \cline{2-6}
+            & 0.5 & 0.25 & 0.1 & 0.01 & 0.001 \\
+            \hline
+            Čas & 0.01s & 0.03s & 0.5s & 31s & 4651 \\
+            \hline
+        \end{tabular}
+        \caption{Vpliv vrednosti $\epsilon$ na čas iskanja poti}
+    \end{table}
+
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            & \multicolumn{3}{c|}{n} \\
+            \cline{2-4}
+            & 15 & 40 & 180 \\
+            \hline
+            Čas & 0.37s & 24s &  905s \\
+            \hline
+        \end{tabular}
+        \caption{Vpliv $n$ na čas iskanja poti ($\epsilon$ = 0.2)}
+
+    \end{table}
 
 \end{frame}
 
