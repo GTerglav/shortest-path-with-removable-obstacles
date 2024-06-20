@@ -103,34 +103,78 @@ class persistentRBTree:
     # find and return item in tree with greatest key value <= to key at time.
     # Need to save the node at which we last went right
     def access(self, node, key, time, lastRight):
-        while node:
-            if node.timeCreated <= time < node.timeDeleted:
-                if self.equality(node.key, key):
-                    return node
-                elif self.relation(node.key, key):
-                    lastRight = node
-                    node = self.getLatestChild(node, time, "right")
-                else:
-                    node = self.getLatestChild(node, time, "left")
+        if node is None:
+            return lastRight
+
+        # I have an infinite recursion issue that should happen
+        # Probably cause node has itself as child
+        # Maybe issue with insertions, deletions not happening at right times
+        if lastRight:
+            if self.equality(node.key, lastRight.key):
+                return lastRight
+
+        # First check correct time should always be true though
+        if node.timeCreated <= time < node.timeDeleted:
+
+            # found
+            # if node.key == key:
+            if self.equality(node.key, key):
+                return node
+
+            # go right
+            # if node.key < key:
+            elif self.relation(node.key, key):
+                return self.access(
+                    self.getLatestChild(node, time, "right"), key, time, node
+                )  # Update lastRight to this node
+
+            # go left
+            # if node.key > key:
             else:
-                break
-        return lastRight
+                return self.access(
+                    self.getLatestChild(node, time, "left"), key, time, lastRight
+                )
+
+        else:
+            print("Access error: wrong time")
+            return lastRight
 
     # find and return item in tree with smalles key value >= to key at time.
     # Like access only here we save last left node
     def leftAccess(self, node, key, time, lastLeft):
-        while node:
-            if node.timeCreated <= time < node.timeDeleted:
-                if self.equality(node.key, key):
-                    return node
-                elif self.relation(node.key, key):
-                    node = self.getLatestChild(node, time, "right")
-                else:
-                    lastLeft = node
-                    node = self.getLatestChild(node, time, "left")
+        if node is None:
+            return lastLeft
+
+        # I have an infinite recursion issue that shouldn't happen
+        if lastLeft:
+            if self.equality(node.key, lastLeft.key):
+                return lastLeft
+
+        # First check correct time should always be true though
+        if node.timeCreated <= time < node.timeDeleted:
+
+            # found
+            # if node.key == key:
+            if self.equality(node.key, key):
+                return node
+
+            # go right
+            # if node.key < key:
+            elif self.relation(node.key, key):
+                return self.leftAccess(
+                    self.getLatestChild(node, time, "right"), key, time, lastLeft
+                )
+
+            # go left
+            # if node.key > key:
             else:
-                break
-        return lastLeft
+                return self.leftAccess(
+                    self.getLatestChild(node, time, "left"), key, time, node
+                )  # Update lastLeft to this node
+
+        else:
+            print("Left access error: wrong time")
+            return lastLeft
 
     # Returns all items with lB <= key uB at time
     def accessRange(self, lowerBound, upperBound, time):
@@ -152,7 +196,7 @@ class persistentRBTree:
 
         # We repeat until we meet a node with key higher than upper bound
 
-        # Also if we go to left parent and can still go to its right parent and it might be in range!!
+        # Wrong!!! Also if we go to left parent and can still go to its right parent and it might be in range.
 
         def getAllChildren(node):
             if node is None:
@@ -438,61 +482,136 @@ class persistentRBTree:
             leftChild = self.getLatestChild(node, time, "left")
         return node
 
+    # Left rotation, also returns nodes that got copied
     def leftRotate(self, node, time):
+
+        # Right child
         y = self.getLatestChild(node, time, "right")
         if y is None:
             return []
 
         yLeftChild = self.getLatestChild(y, time, "left")
 
+        # First Assignt new parents to all nodes
         nodeParent = self.getCurrentParent(node, time)
         y.parents[time] = nodeParent
         if nodeParent is None:
             self.roots[time] = y
-        else:
-            direction = (
-                "left"
-                if node == self.getLatestChild(nodeParent, time, "left")
-                else "right"
-            )
-            self.addPointer([time, direction, y], nodeParent, time)
-
-        self.addPointer([time, "left", node], y, time)
-        self.addPointer([time, "right", yLeftChild], node, time)
-
         if yLeftChild is not None:
             yLeftChild.parents[time] = node
         node.parents[time] = y
 
-        return [node, y]
+        # Now add pointers from bottom up
+        # We can remove current pointer from node to y if it exists, to free up space
+        for pointer in node.pointers:
+            if pointer[0] == time and pointer[2] == y:
+                node.pointers.remove(pointer)
 
+        # Add right pointer from node to yLeftChild
+        copies = self.addPointer([time, "right", yLeftChild], node, time)
+
+        # this means node got copied, we already have pointer from y to copy of node
+        if len(copies) == 1:
+
+            # update our nodes to new versions
+            node = copies[0]
+            y = self.getCurrentParent(node, time)
+            parent = self.getCurrentParent(y, time)
+
+            # Only have to add pointer from parent to y
+            if parent is not None:
+                # if parent.key < node.key:
+                if self.relation(parent.key, node.key):
+                    copies2 = self.addPointer([time, "right", y], parent, time)
+                    return copies + copies2
+                else:
+                    copies2 = self.addPointer([time, "left", y], parent, time)
+                    return copies + copies2
+
+        # means node and y got copied and we have all the pointers we need
+        elif len(copies) > 1:
+            return copies
+
+        # No copying done
+        else:
+            # Add Left pointer from y to node a
+            copies3 = self.addPointer([time, "left", node], y, time)
+
+            # If y got copied we are done
+            if len(copies3) >= 1:
+                return copies + copies3
+            else:
+                # add pointer from parent to y
+                parent = self.getCurrentParent(y, time)
+                if parent is not None:
+                    # if parent.key < node.key:
+                    if self.relation(parent.key, node.key):
+                        copies4 = self.addPointer([time, "right", y], parent, time)
+                        return copies + copies3 + copies4
+                    else:
+                        copies4 = self.addPointer([time, "left", y], parent, time)
+                        return copies + copies3 + copies4
+
+    # Same as left rotate
     def rightRotate(self, node, time):
+
+        # Left child
         y = self.getLatestChild(node, time, "left")
         if y is None:
-            return []
+            return
 
         yRightChild = self.getLatestChild(y, time, "right")
 
+        # First Assignt new parents to all nodes
         nodeParent = self.getCurrentParent(node, time)
         y.parents[time] = nodeParent
         if nodeParent is None:
             self.roots[time] = y
-        else:
-            direction = (
-                "left"
-                if node == self.getLatestChild(nodeParent, time, "left")
-                else "right"
-            )
-            self.addPointer([time, direction, y], nodeParent, time)
-
-        self.addPointer([time, "right", node], y, time)
-        self.addPointer([time, "left", yRightChild], node, time)
-
         if yRightChild is not None:
             yRightChild.parents[time] = node
         node.parents[time] = y
 
-        return [node, y]
+        # Now add pointers from bottom up
+        # We can remove current pointer from node to y if it exists, to free up space
+        for pointer in node.pointers:
+            if pointer[0] == time and pointer[2] == y:
+                node.pointers.remove(pointer)
+        # Add left pointer from node to yRightChild
+        copies = self.addPointer([time, "left", yRightChild], node, time)
+        if (
+            len(copies) == 1
+        ):  # that means node got copied and we already have pointer from new node to y
+            node = copies[0]
+            y = self.getCurrentParent(node, time)
+            parent = self.getCurrentParent(y, time)
+            if parent is not None:
+                # if parent.key > node.key:
+                if self.relation(node.key, parent.key):
+                    copies2 = self.addPointer([time, "left", y], parent, time)
+                    return copies + copies2
+                else:
+                    copies2 = self.addPointer([time, "right", y], parent, time)
+                    return copies + copies2
+
+        elif (
+            len(copies) > 1
+        ):  # means node and y got copied and we have all the connections we need
+            return copies
+        else:  # No copying done
+            # Add Right pointer from y to node a
+            copies3 = self.addPointer([time, "right", node], y, time)
+            if len(copies3) >= 1:  # If y got copied we are done
+                return copies + copies3
+            else:
+                parent = self.getCurrentParent(y, time)
+                if parent is not None:
+                    # if parent.key > node.key:
+                    if self.relation(node.key, parent.key):
+                        copies4 = self.addPointer([time, "left", y], parent, time)
+                        return copies + copies3 + copies4
+                    else:
+                        copies4 = self.addPointer([time, "right", y], parent, time)
+                        return copies + copies3 + copies4
 
     # Almost the same as for ephemereal (normal) RB Trees
     def fixInsert(self, node, time):
@@ -510,7 +629,9 @@ class persistentRBTree:
                 else:
                     if node == self.getLatestChild(parent, time, "right"):
                         node = parent
-                        self.leftRotate(node, time)
+                        copies = self.leftRotate(node, time)
+                        if len(copies) > 0:
+                            grandparent = copies[0]
                         parent = self.getCurrentParent(node, time)
                     parent.colors[time] = "black"
                     grandparent.colors[time] = "red"
@@ -525,7 +646,9 @@ class persistentRBTree:
                 else:
                     if node == self.getLatestChild(parent, time, "left"):
                         node = parent
-                        self.rightRotate(node, time)
+                        copies = self.rightRotate(node, time)
+                        if len(copies) > 0:
+                            grandparent = copies[0]
                         parent = self.getCurrentParent(node, time)
                     parent.colors[time] = "black"
                     grandparent.colors[time] = "red"
@@ -565,24 +688,42 @@ class persistentRBTree:
             child = self.getLatestChild(nodeToDelete, time, "left")
             self.transplant(nodeToDelete, child, time)
         else:
+            # Inorder succesor. Min element of right subtree
             successor = self.minimum(
                 self.getLatestChild(nodeToDelete, time, "right"), time
             )
             original_color = self.getCurrentColor(successor, time)
             child = self.getLatestChild(successor, time, "right")
-            if self.getCurrentParent(successor, time) != nodeToDelete:
+            if self.getCurrentParent(successor, time) == nodeToDelete:
+                pass
+                # if child is not None:
+                #     child.parents[time] = (
+                #         successor  # This is useless the parent is already successor by def??
+                #     )
+            else:
                 self.transplant(successor, child, time)
+                # Right child of node to delete
+                rc = self.getLatestChild(nodeToDelete, time, "right")
                 self.addPointer(
-                    [time, "right", self.getLatestChild(nodeToDelete, time, "right")],
+                    [time, "right", rc],
                     successor,
                     time,
                 )
+                if rc is not None and rc != successor:
+                    self.getLatestChild(nodeToDelete, time, "right").parents[
+                        time
+                    ] = successor
             self.transplant(nodeToDelete, successor, time)
+            lc = self.getLatestChild(nodeToDelete, time, "left")
             self.addPointer(
-                [time, "left", self.getLatestChild(nodeToDelete, time, "left")],
+                [time, "left", lc],
                 successor,
                 time,
             )
+            if lc is not None and lc != successor:
+                self.getLatestChild(nodeToDelete, time, "left").parents[
+                    time
+                ] = successor
             successor.colors[time] = self.getCurrentColor(nodeToDelete, time)
 
         nodeToDelete.timeDeleted = time
@@ -605,40 +746,34 @@ class persistentRBTree:
         ):
             if node == self.getLatestChild(parent, time, "left"):
                 sibling = self.getLatestChild(parent, time, "right")
-                if sibling and self.getCurrentColor(sibling, time) == "red":
+                if self.getCurrentColor(sibling, time) == "red":
                     sibling.colors[time] = "black"
                     parent.colors[time] = "red"
                     self.leftRotate(parent, time)
                     sibling = self.getLatestChild(parent, time, "right")
                 if (
-                    self.getLatestChild(sibling, time, "left") is None
-                    or self.getCurrentColor(
+                    self.getCurrentColor(
                         self.getLatestChild(sibling, time, "left"), time
                     )
                     == "black"
-                ) and (
-                    self.getLatestChild(sibling, time, "right") is None
-                    or self.getCurrentColor(
+                    and self.getCurrentColor(
                         self.getLatestChild(sibling, time, "right"), time
                     )
                     == "black"
                 ):
-                    if sibling:
-                        sibling.colors[time] = "red"
+                    sibling.colors[time] = "red"
                     node = parent
                     parent = self.getCurrentParent(node, time)
                 else:
                     if (
-                        self.getLatestChild(sibling, time, "right") is None
-                        or self.getCurrentColor(
+                        self.getCurrentColor(
                             self.getLatestChild(sibling, time, "right"), time
                         )
                         == "black"
                     ):
-                        if self.getLatestChild(sibling, time, "left"):
-                            self.getLatestChild(sibling, time, "left").colors[
-                                time
-                            ] = "black"
+                        self.getLatestChild(sibling, time, "left").colors[
+                            time
+                        ] = "black"
                         sibling.colors[time] = "red"
                         self.rightRotate(sibling, time)
                         sibling = self.getLatestChild(parent, time, "right")
@@ -653,40 +788,34 @@ class persistentRBTree:
                     node = self.getCurrentRoot(time)
             else:
                 sibling = self.getLatestChild(parent, time, "left")
-                if sibling and self.getCurrentColor(sibling, time) == "red":
+                if self.getCurrentColor(sibling, time) == "red":
                     sibling.colors[time] = "black"
                     parent.colors[time] = "red"
                     self.rightRotate(parent, time)
                     sibling = self.getLatestChild(parent, time, "left")
                 if (
-                    self.getLatestChild(sibling, time, "left") is None
-                    or self.getCurrentColor(
+                    self.getCurrentColor(
                         self.getLatestChild(sibling, time, "left"), time
                     )
                     == "black"
-                ) and (
-                    self.getLatestChild(sibling, time, "right") is None
-                    or self.getCurrentColor(
+                    and self.getCurrentColor(
                         self.getLatestChild(sibling, time, "right"), time
                     )
                     == "black"
                 ):
-                    if sibling:
-                        sibling.colors[time] = "red"
+                    sibling.colors[time] = "red"
                     node = parent
                     parent = self.getCurrentParent(node, time)
                 else:
                     if (
-                        self.getLatestChild(sibling, time, "left") is None
-                        or self.getCurrentColor(
+                        self.getCurrentColor(
                             self.getLatestChild(sibling, time, "left"), time
                         )
                         == "black"
                     ):
-                        if self.getLatestChild(sibling, time, "right"):
-                            self.getLatestChild(sibling, time, "right").colors[
-                                time
-                            ] = "black"
+                        nephew = self.getLatestChild(sibling, time, "right")
+                        if nephew:
+                            nephew.colors[time] = "black"
                         sibling.colors[time] = "red"
                         self.leftRotate(sibling, time)
                         sibling = self.getLatestChild(parent, time, "left")
@@ -766,36 +895,36 @@ tree = persistentRBTree(relation, equality)
 
 # Tests
 
-tree.insert(10, "A", 1)
-tree.insert(20, "B", 1)
-tree.insert(15, "C", 1)
+# tree.insert(10, "A", 1)
+# tree.insert(20, "B", 1)
+# tree.insert(15, "C", 1)
 
-tree.delete(10, 2)
-tree.insert(30, "E", 2)
-tree.insert(40, "F", 2)
+# tree.delete(10, 2)
+# tree.insert(30, "E", 2)
+# tree.insert(40, "F", 2)
 
-tree.delete(20, 3)
-tree.insert(35, "G", 3)
-tree.insert(45, "H", 3)
+# tree.delete(20, 3)
+# tree.insert(35, "G", 3)
+# tree.insert(45, "H", 3)
 
-tree.delete(15, 4)
-tree.delete(30, 4)
-tree.insert(7, "I", 4)
+# tree.delete(15, 4)
+# tree.delete(30, 4)
+# tree.insert(7, "I", 4)
 
 
-print("Tree at time 1:")
-tree.printTree(1)
+# print("Tree at time 1:")
+# tree.printTree(1)
 
-print("Tree at time 2:")
-tree.printTree(2)
+# print("Tree at time 2:")
+# tree.printTree(2)
 
-print("Tree at time 3:")
-tree.printTree(3)
+# print("Tree at time 3:")
+# tree.printTree(3)
 
-print("Tree at time 4:")
-tree.printTree(4)
+# print("Tree at time 4:")
+# tree.printTree(4)
 
-print("inorder Traversal:")
-print(tree.inorderTraversal(4))
-print("range:")
-print(tree.accessRange(7, 45, 4))
+# print("inorder Traversal:")
+# print(tree.inorderTraversal(4))
+# print("range:")
+# print(tree.accessRange(7, 45, 4))

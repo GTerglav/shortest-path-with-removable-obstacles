@@ -502,10 +502,6 @@ def rotatepoint(x, y, alpha):
     return [xNew, yNew]
 
 
-# print(rotatepoint(2.1407169276719, 0.2791979948389247, 72))
-# print(rotatepoint(1.9497339220468473, -0.3085872574535484, 72))
-
-
 # The other way
 def revertpoint(xNew, yNew, alpha):
     alphaRad = math.radians(alpha)

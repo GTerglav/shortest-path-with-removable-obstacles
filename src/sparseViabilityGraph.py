@@ -186,22 +186,11 @@ def makeVerticalPersistentTree(obstacles, costs, relation, equality):
     queue = []
     for point in sortedPoints:
 
-        # if point[0][1] == 2.8:
-        #     print("time")
-
         while queue != [] and queue[0][2] < point[0][1]:
             tree.insert(
                 queue[0][0], queue[0][1], queue[0][2]
             )  # queue is list of [val,key,time]
             queue.pop(0)
-
-        # root = tree.getCurrentRoot(point[0][1])
-        # node = tree.findNodeToDelete(root, [[-1.0, 0.1], [-2.0, 10.0]], point[0][1])
-        # if node:
-        #     print(f"We are all good in{point[0][1]}")
-        # else:
-        #     print(f"We lost it in{point[0][1]}")
-        # Lost it in 2.8
 
         # two neighbors in obstacle
         neighbors = helper.findObstacleEdges(obstacles, point[0], point[2])
@@ -270,10 +259,6 @@ def makeHorizontalPersistentTree(obstacles, costs, relation, equality):
 # The cost is wrong in the case that (v,u) passes through two obstacle vertices of same obstacle.
 # Then it wont add the obstacle to cost. Dont know how to solve TODO
 def costFunction(v, u, tree):
-    if not helper.verticesDifferent(v, [-10, 2.9]) or not helper.verticesDifferent(
-        u, [-10, 2.9]
-    ):
-        print("h")
     # get all edges that intersect (u,v)
     if v[0] == u[0]:  # (u,v) vertical
         lb = [v, [v[0], v[1] + 2 * epsilon]]
