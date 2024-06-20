@@ -113,11 +113,11 @@
             \cline{2-5}
             & 0.01 & $10^{-3}$ & $10^{-4}$ & $10^{-5}$ \\
             \hline
-            Čas & 0.5s & 5s &  57s & memory full \\
+            Čas & 0.9s & 5.8s &  57s & memory full \\
             \hline
            
         \end{tabular}
-        \caption{Vpliv vrednosti $\epsilon$ na čas iskanja poti}
+        \caption{Vpliv vrednosti $\epsilon$ na čas iskanja poti ($n = 40$)}
         \label{tab:2}
     \end{table}
 
@@ -172,11 +172,11 @@
             \cline{2-5}
             & 0.01 & $10^{-3}$ & $10^{-4}$ & $10^{-5}$ \\
             \hline
-            Čas & 1s & 11s & 126s  &  memory full \\
+            Čas & 1.5s & 9.2s & 99s  &  memory full \\
             \hline
            
         \end{tabular}
-        \caption{Vpliv vrednosti $\epsilon$ na čas iskanja poti}
+        \caption{Vpliv vrednosti $\epsilon$ na čas iskanja poti ($n = 40$)}
     \end{table}
 \end{frame}
 
@@ -224,12 +224,15 @@
     \includegraphics[width=1\textwidth]{psTree.png}
 
 \end{frame}
+
 \begin{frame}
     \frametitle{Persistent search tree}
-
-    \includegraphics[width=0.5\textwidth]{treeCode.png}
-    \includegraphics[width=0.5\textwidth]{treeOutput.png}
-    
+    \begin{minipage}{0.5\textwidth}
+        \includegraphics[width=0.9\textwidth]{treeCode.png}
+    \end{minipage}%
+    \begin{minipage}{0.5\textwidth}
+        \includegraphics[width=0.87\textwidth]{treeOutput.png}
+    \end{minipage}
 \end{frame}
 
 \begin{frame}
@@ -288,5 +291,44 @@
     \includegraphics[width=1\textwidth]{pr4ViaGraph.png}
 
 \end{frame}
+
+\begin{frame}
+    \frametitle{Primerjava algoritmov glede na n}
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|}
+            \hline
+             & 40 & 180 & 360 & 860 \\
+            \hline
+            Naive & 0.5s & 36s & 301s & 1ura 16min \\
+            \hline
+            Sweep & 0.7s & 50s & 393s & 1ura 28min \\
+            \hline
+            Sparse & 25s & 905s & - & - \\
+            \hline
+        \end{tabular}
+        \caption{Vpliv $n$ na čas iskanja poti}
+    \end{table}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Primerjava algoritmov glede na $\epsilon$}
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|}
+            \hline
+             & 0.01 & $10^{-3}$ & $10^{-4}$ & $10^{-5}$ \\
+            \hline
+            Naive & 0.9s & 5.8s & 57s & memory full \\
+            \hline
+            Sweep & 1.5s & 9.2s & 99s & memory full \\
+            \hline
+            Sparse & 31s & 4651s & - & - \\
+            \hline
+        \end{tabular}
+        \caption{Vpliv vrednosti $\epsilon$ na čas iskanja poti}
+    \end{table}
+\end{frame}
+
 
 \end{document}

@@ -441,15 +441,15 @@ pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 # Still n^3 just shorter now
 
 if __name__ == "__main__":
-    startTime = time.time()
-    main(pklProblem1000)
-    endTime = time.time()
-    print(f"Execution time {endTime - startTime} seconds")
+    # startTime = time.time()
+    # main(pklProblem1000)
+    # endTime = time.time()
+    # print(f"Execution time {endTime - startTime} seconds")
 
-    ####### Code for measuring time for different epsilons #########
-    # epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
-    # for epsilon in epsilons:
-    #     startTime = time.time()
-    #     main(problems.problem4, epsilon)
-    #     endTime = time.time()
-    #     print(f"Epsilon {epsilon}: Execution time {endTime - startTime} seconds")
+    ###### Code for measuring time for different epsilons #########
+    epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
+    for epsilon in epsilons:
+        startTime = time.time()
+        main(pklProblem40, epsilon)
+        endTime = time.time()
+        print(f"Epsilon {epsilon}: Execution time {endTime - startTime} seconds")
