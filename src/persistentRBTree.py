@@ -735,12 +735,12 @@ class persistentRBTree:
                 "(",
                 self.getCurrentColor(node, time),
                 ")",
-                "(created: ",
-                timeC,
-                ")",
-                "(deleted: ",
-                timeD,
-                ")",
+                # "(created: ",
+                # timeC,
+                # ")",
+                # "(deleted: ",
+                # timeD,
+                # ")",
                 sep="",
             )
             indent += "   " if last else "|  "
@@ -795,7 +795,7 @@ tree.printTree(3)
 print("Tree at time 4:")
 tree.printTree(4)
 
-print("inorder Traversal:")
-print(tree.inorderTraversal(4))
-print("range:")
-print(tree.accessRange(7, 45, 4))
+# print("inorder Traversal:")
+# print(tree.inorderTraversal(4))
+# print("range:")
+# print(tree.accessRange(7, 45, 4))

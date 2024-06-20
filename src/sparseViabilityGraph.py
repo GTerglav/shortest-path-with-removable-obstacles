@@ -667,7 +667,7 @@ pklProblem1000 = problems.loadProblemPickle("problem1000.pkl")
 # n = 864, time =
 
 if __name__ == "__main__":
-    main(pklProblem100, 1 / 5)
+    main(problems.problem4, 1 / 5)
 
     # ##### Code for measuring time for different epsilons #########
     # epsilons = [1, 0.5, 0.25, 0.1, 0.01, 0.001, 0.0001, 0.00001]
